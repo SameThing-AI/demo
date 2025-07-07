@@ -161,9 +161,9 @@ This is a demo project for Y Combinator. For production development:
 ## 📞 Contact
 
 **SameThing.AI Team**
-- Email: hello@samething.ai
-- Website: https://samething.ai
-- Demo: https://demo.samething.ai
+- Email: founder@samething-ai.com
+- Website: https://samething-ai.github.io/home/
+<!-- - Demo: https://demo.samething.ai -->
 
 ## 📄 License
 
