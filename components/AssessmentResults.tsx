@@ -13,6 +13,24 @@ interface AssessmentResultsProps {
 export default function AssessmentResults({ results, onBack, onStartNew }: AssessmentResultsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed' | 'feedback'>('overview')
 
+  // Handle case where results is null or undefined
+  if (!results) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">No Results Available</h2>
+          <p className="text-gray-600 mb-6">The assessment results could not be loaded.</p>
+          <button
+            onClick={onBack}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return 'text-green-600'
     if (percentage >= 60) return 'text-yellow-600'
@@ -97,19 +115,19 @@ export default function AssessmentResults({ results, onBack, onStartNew }: Asses
               <div className="flex justify-center items-center space-x-8">
                 <div className="text-center">
                   <div className="text-4xl font-bold mb-1">
-                    {results.percentage}%
+                    {results.percentage || 0}%
                   </div>
                   <div className="text-white/80">Overall Score</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-bold mb-1">
-                    {results.totalScore}/{results.maxScore}
+                    {results.totalScore || 0}/{results.maxScore || 100}
                   </div>
                   <div className="text-white/80">Points</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-bold mb-1">
-                    {formatTime(results.timeSpent)}
+                    {formatTime(results.timeSpent || 0)}
                   </div>
                   <div className="text-white/80">Time Spent</div>
                 </div>
@@ -150,32 +168,38 @@ export default function AssessmentResults({ results, onBack, onStartNew }: Asses
                 className="space-y-6"
               >
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {Object.entries(results.breakdown).map(([category, data]: [string, any]) => (
-                    <div key={category} className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 capitalize">
-                        {category.replace(/([A-Z])/g, ' $1').trim()}
-                      </h3>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-2xl font-bold text-gray-900">
-                            {data.score}/{data.max}
-                          </span>
-                          <span className={`text-lg font-semibold ${getScoreColor(data.percentage)}`}>
-                            {data.percentage}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              data.percentage >= 80 ? 'bg-green-500' :
+                  {results.breakdown && Object.entries(results.breakdown).length > 0 ? (
+                    Object.entries(results.breakdown).map(([category, data]: [string, any]) => (
+                      <div key={category} className="bg-gray-50 rounded-lg p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2 capitalize">
+                          {category.replace(/([A-Z])/g, ' $1').trim()}
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-2xl font-bold text-gray-900">
+                              {data.score}/{data.max}
+                            </span>
+                            <span className={`text-lg font-semibold ${getScoreColor(data.percentage)}`}>
+                              {data.percentage}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                data.percentage >= 80 ? 'bg-green-500' :
                               data.percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                             }`}
                             style={{ width: `${data.percentage}%` }}
-                          ></div>
+                          >                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-8 text-gray-500">
+                      <p>No detailed breakdown available for this assessment.</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-blue-50 rounded-lg p-6">
@@ -186,27 +210,35 @@ export default function AssessmentResults({ results, onBack, onStartNew }: Asses
                     <div>
                       <h4 className="font-medium text-blue-800 mb-2">Strengths:</h4>
                       <ul className="text-blue-700 space-y-1">
-                        {Object.entries(results.breakdown)
-                          .filter(([_, data]: [string, any]) => data.percentage >= 75)
-                          .map(([category]) => (
-                            <li key={category} className="flex items-center">
-                              <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                              {category.replace(/([A-Z])/g, ' $1').trim()}
-                            </li>
-                          ))}
+                        {results.breakdown ? (
+                          Object.entries(results.breakdown)
+                            .filter(([_, data]: [string, any]) => data.percentage >= 75)
+                            .map(([category]) => (
+                              <li key={category} className="flex items-center">
+                                <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                                {category.replace(/([A-Z])/g, ' $1').trim()}
+                              </li>
+                            ))
+                        ) : (
+                          <li className="text-gray-500">No data available</li>
+                        )}
                       </ul>
                     </div>
                     <div>
                       <h4 className="font-medium text-blue-800 mb-2">Areas for Improvement:</h4>
                       <ul className="text-blue-700 space-y-1">
-                        {Object.entries(results.breakdown)
-                          .filter(([_, data]: [string, any]) => data.percentage < 75)
-                          .map(([category]) => (
-                            <li key={category} className="flex items-center">
-                              <XCircle className="h-4 w-4 mr-2 text-red-600" />
-                              {category.replace(/([A-Z])/g, ' $1').trim()}
-                            </li>
-                          ))}
+                        {results.breakdown ? (
+                          Object.entries(results.breakdown)
+                            .filter(([_, data]: [string, any]) => data.percentage < 75)
+                            .map(([category]) => (
+                              <li key={category} className="flex items-center">
+                                <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                                {category.replace(/([A-Z])/g, ' $1').trim()}
+                              </li>
+                            ))
+                        ) : (
+                          <li className="text-gray-500">No data available</li>
+                        )}
                       </ul>
                     </div>
                   </div>
@@ -221,9 +253,10 @@ export default function AssessmentResults({ results, onBack, onStartNew }: Asses
                 transition={{ duration: 0.5 }}
                 className="space-y-6"
               >
-                {results.questionScores.map((item: any, index: number) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-6">
-                    <div className="flex justify-between items-start mb-4">
+                {results.questionScores && results.questionScores.length > 0 ? (
+                  results.questionScores.map((item: any, index: number) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex justify-between items-start mb-4">
                       <h3 className="text-lg font-semibold text-gray-900">
                         Question {index + 1}
                       </h3>
@@ -249,7 +282,12 @@ export default function AssessmentResults({ results, onBack, onStartNew }: Asses
                       <p className="text-blue-800">{item.feedback}</p>
                     </div>
                   </div>
-                ))}
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No detailed question scores available.</p>
+                  </div>
+                )}
               </motion.div>
             )}
 
@@ -274,25 +312,25 @@ export default function AssessmentResults({ results, onBack, onStartNew }: Asses
                       <p className="text-gray-700">
                         Based on your responses, you demonstrate {results.percentage >= 80 ? 'excellent' : results.percentage >= 60 ? 'good' : 'developing'} understanding 
                         of the key concepts required for this role. Your technical knowledge appears 
-                        {results.breakdown.technical.percentage >= 75 ? ' strong' : ' to need development'}, 
+                        {results.breakdown?.technical?.percentage >= 75 ? ' strong' : ' to need development'}, 
                         and your problem-solving approach shows 
-                        {results.breakdown.problemSolving.percentage >= 75 ? ' clear analytical thinking' : ' room for improvement in structured thinking'}.
+                        {results.breakdown?.problemSolving?.percentage >= 75 ? ' clear analytical thinking' : ' room for improvement in structured thinking'}.
                       </p>
                     </div>
                     
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-2">Recommendations:</h4>
                       <ul className="text-gray-700 space-y-2">
-                        {results.breakdown.technical.percentage < 75 && (
+                        {results.breakdown?.technical?.percentage < 75 && (
                           <li>• Focus on strengthening core technical skills through hands-on practice</li>
                         )}
-                        {results.breakdown.problemSolving.percentage < 75 && (
+                        {results.breakdown?.problemSolving?.percentage < 75 && (
                           <li>• Practice breaking down complex problems into smaller, manageable parts</li>
                         )}
-                        {results.breakdown.communication.percentage < 75 && (
+                        {results.breakdown?.communication?.percentage < 75 && (
                           <li>• Work on explaining technical concepts clearly and concisely</li>
                         )}
-                        {results.breakdown.cultural.percentage < 75 && (
+                        {results.breakdown?.cultural?.percentage < 75 && (
                           <li>• Consider learning more about collaborative work environments and team dynamics</li>
                         )}
                         <li>• Continue building on your existing strengths while addressing areas for improvement</li>

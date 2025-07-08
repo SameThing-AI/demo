@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Clock, CheckCircle, ArrowRight, Save } from 'lucide-react'
+import { ArrowLeft, Clock, ChevronLeft, ChevronRight, CheckCircle, Save, ArrowRight } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useData } from '@/contexts/DataContext'
 
 interface TakeAssessmentProps {
   assessmentData: any
@@ -11,9 +13,11 @@ interface TakeAssessmentProps {
 }
 
 export default function TakeAssessment({ assessmentData, onBack, onComplete }: TakeAssessmentProps) {
+  const { user } = useAuth()
+  const { addResponse } = useData()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [timeRemaining, setTimeRemaining] = useState(assessmentData.timeLimit * 60) // Convert to seconds
+  const [timeRemaining, setTimeRemaining] = useState(assessmentData.timeLimit ? assessmentData.timeLimit * 60 : 3600)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Timer effect
@@ -58,6 +62,11 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
     setIsSubmitting(true)
     
     try {
+      // Convert answers object to array for API compatibility
+      const answersArray = assessmentData.questions.map((_: any, index: number) => 
+        answers[index] || ''
+      )
+      
       const response = await fetch('/api/evaluate-assessment', {
         method: 'POST',
         headers: {
@@ -65,13 +74,32 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
         },
         body: JSON.stringify({
           assessmentData,
-          answers,
+          answers: answersArray,
           timeSpent: (assessmentData.timeLimit * 60) - timeRemaining
         }),
       })
 
       if (response.ok) {
         const results = await response.json()
+        
+        // Save response to data store
+        const candidateResponse = {
+          id: Date.now().toString(),
+          assessmentId: assessmentData.id || Date.now().toString(),
+          candidateId: user?.id || '',
+          candidateName: user?.name || '',
+          candidateEmail: user?.email || '',
+          score: results.percentage || 0,
+          completedAt: new Date().toISOString(),
+          answers: Object.entries(answers).map(([questionIndex, answer]) => ({
+            questionId: questionIndex,
+            answer,
+            score: results.questionScores?.[parseInt(questionIndex)]?.score || 0
+          })),
+          feedback: results.breakdown || {}
+        }
+        
+        addResponse(candidateResponse)
         onComplete(results)
       } else {
         throw new Error('Failed to evaluate assessment')
@@ -98,6 +126,25 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
           feedback: 'Good understanding demonstrated with room for improvement in specific areas.'
         }))
       }
+      
+      // Save mock response to data store
+      const candidateResponse = {
+        id: Date.now().toString(),
+        assessmentId: assessmentData.id || Date.now().toString(),
+        candidateId: user?.id || '',
+        candidateName: user?.name || '',
+        candidateEmail: user?.email || '',
+        score: mockResults.percentage || 0,
+        completedAt: new Date().toISOString(),
+        answers: Object.entries(answers).map(([questionIndex, answer]) => ({
+          questionId: questionIndex,
+          answer,
+          score: mockResults.questionScores?.[parseInt(questionIndex)]?.score || 0
+        })),
+        feedback: mockResults.breakdown || {}
+      }
+      
+      addResponse(candidateResponse)
       onComplete(mockResults)
     } finally {
       setIsSubmitting(false)

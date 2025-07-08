@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Loader2, Building, User, FileText } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useData } from '@/contexts/DataContext'
 
 interface AssessmentFormProps {
   onAssessmentGenerated: (data: any) => void
@@ -10,6 +12,8 @@ interface AssessmentFormProps {
 }
 
 export default function AssessmentForm({ onAssessmentGenerated, onBack }: AssessmentFormProps) {
+  const { user } = useAuth()
+  const { addAssessment } = useData()
   const [formData, setFormData] = useState({
     jobTitle: '',
     company: '',
@@ -40,6 +44,20 @@ export default function AssessmentForm({ onAssessmentGenerated, onBack }: Assess
 
       if (response.ok) {
         const assessmentData = await response.json()
+        
+        // Save to data store
+        const newAssessment = {
+          id: Date.now().toString(),
+          title: formData.jobTitle,
+          company: formData.company,
+          description: formData.jobDescription,
+          questions: assessmentData.questions || [],
+          createdAt: new Date().toISOString().split('T')[0],
+          createdBy: user?.id || '',
+          duration: assessmentData.timeLimit || 60
+        }
+        
+        addAssessment(newAssessment)
         onAssessmentGenerated(assessmentData)
       } else {
         throw new Error('Failed to generate assessment')
@@ -82,6 +100,20 @@ export default function AssessmentForm({ onAssessmentGenerated, onBack }: Assess
         timeLimit: 90,
         instructions: 'This assessment evaluates your technical skills, problem-solving ability, and cultural fit for the role.'
       }
+      
+      // Save mock assessment to data store
+      const newAssessment = {
+        id: Date.now().toString(),
+        title: formData.jobTitle,
+        company: formData.company,
+        description: formData.jobDescription,
+        questions: mockAssessment.questions || [],
+        createdAt: new Date().toISOString().split('T')[0],
+        createdBy: user?.id || '',
+        duration: mockAssessment.timeLimit || 60
+      }
+      
+      addAssessment(newAssessment)
       onAssessmentGenerated(mockAssessment)
     } finally {
       setIsGenerating(false)

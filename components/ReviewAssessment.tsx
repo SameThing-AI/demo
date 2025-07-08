@@ -13,6 +13,24 @@ interface ReviewAssessmentProps {
 export default function ReviewAssessment({ assessmentData, results, onBack }: ReviewAssessmentProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0)
 
+  // Handle case where data is null or undefined
+  if (!assessmentData || !results || !assessmentData.questions || !results.questionScores) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Data Not Available</h2>
+          <p className="text-gray-600 mb-6">The assessment or results data could not be loaded.</p>
+          <button
+            onClick={onBack}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -31,8 +49,27 @@ export default function ReviewAssessment({ assessmentData, results, onBack }: Re
     return 'bg-red-100'
   }
 
-  const currentQ = assessmentData.questions[currentQuestion]
-  const currentResult = results.questionScores[currentQuestion]
+  // Safe access with bounds checking
+  const currentQ = assessmentData.questions?.[currentQuestion]
+  const currentResult = results.questionScores?.[currentQuestion]
+
+  // Additional safety check
+  if (!currentQ || !currentResult) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Question Not Found</h2>
+          <p className="text-gray-600 mb-6">The selected question or result data is not available.</p>
+          <button
+            onClick={onBack}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

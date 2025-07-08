@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Brain, Target, Users, Zap, ArrowRight, CheckCircle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import AuthForm from '@/components/AuthForm'
+import RecruiterDashboard from '@/components/RecruiterDashboard'
+import CandidateDashboard from '@/components/CandidateDashboard'
 import AssessmentForm from '@/components/AssessmentForm'
 import AssessmentDisplay from '@/components/AssessmentDisplay'
 import TakeAssessment from '@/components/TakeAssessment'
@@ -10,12 +14,36 @@ import AssessmentResults from '@/components/AssessmentResults'
 import ReviewAssessment from '@/components/ReviewAssessment'
 
 export default function Home() {
+  const { user, login, isAuthenticated } = useAuth()
   const [currentStep, setCurrentStep] = useState<'landing' | 'form' | 'assessment' | 'take' | 'results' | 'review'>('landing')
   const [assessmentData, setAssessmentData] = useState<any>(null)
   const [results, setResults] = useState<any>(null)
+  const [showDemo, setShowDemo] = useState(false)
+
+  // If user is authenticated, show their dashboard
+  if (isAuthenticated && user && !showDemo) {
+    if (user.type === 'recruiter') {
+      return <RecruiterDashboard />
+    } else {
+      return <CandidateDashboard />
+    }
+  }
+
+  // If not authenticated, show auth form
+  if (!isAuthenticated && !showDemo) {
+    return <AuthForm onAuth={login} />
+  }
 
   const handleStartAssessment = () => {
+    setShowDemo(true)
     setCurrentStep('form')
+  }
+
+  const handleBackToDashboard = () => {
+    setShowDemo(false)
+    setCurrentStep('landing')
+    setAssessmentData(null)
+    setResults(null)
   }
 
   const handleAssessmentGenerated = (data: any) => {
@@ -36,6 +64,7 @@ export default function Home() {
     setCurrentStep('landing')
     setAssessmentData(null)
     setResults(null)
+    setShowDemo(false)
   }
 
   const handleReviewAssessment = () => {
@@ -46,7 +75,7 @@ export default function Home() {
     return (
       <AssessmentForm 
         onAssessmentGenerated={handleAssessmentGenerated}
-        onBack={() => setCurrentStep('landing')}
+        onBack={handleBackToDashboard}
       />
     )
   }
@@ -101,11 +130,27 @@ export default function Home() {
               <Brain className="h-8 w-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">SameThing.AI</h1>
             </div>
-            <nav className="hidden md:flex space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-blue-600">Features</a>
-              <a href="#how-it-works" className="text-gray-600 hover:text-blue-600">How it Works</a>
-              <a href="#pricing" className="text-gray-600 hover:text-blue-600">Pricing</a>
-            </nav>
+            <div className="flex items-center space-x-4">
+              {isAuthenticated && user ? (
+                <>
+                  <span className="text-sm text-gray-700">
+                    {user.name} ({user.type})
+                  </span>
+                  <button
+                    onClick={handleBackToDashboard}
+                    className="text-blue-600 hover:text-blue-800 text-sm transition-colors"
+                  >
+                    Back to Dashboard
+                  </button>
+                </>
+              ) : (
+                <nav className="hidden md:flex space-x-8">
+                  <a href="#features" className="text-gray-600 hover:text-blue-600">Features</a>
+                  <a href="#how-it-works" className="text-gray-600 hover:text-blue-600">How it Works</a>
+                  <a href="#pricing" className="text-gray-600 hover:text-blue-600">Pricing</a>
+                </nav>
+              )}
+            </div>
           </div>
         </div>
       </header>
