@@ -2,17 +2,22 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Users, FileText, BarChart3, Eye, Calendar, Building, LogOut } from 'lucide-react'
+import { Plus, Users, FileText, BarChart3, Eye, Calendar, Building, LogOut, Sparkles } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useData } from '@/contexts/DataContext'
 import AssessmentForm from './AssessmentForm'
 import AssessmentDisplay from './AssessmentDisplay'
 import ReviewAssessment from './ReviewAssessment'
+import CreativeAssessmentForm from './CreativeAssessmentForm'
+import AdvancedAssessmentBuilder from './AdvancedAssessmentBuilder'
+import MultiModalAssessmentBuilder from './MultiModalAssessmentBuilder'
+import RecruiterAIAssistant from './RecruiterAIAssistant'
+import EnterpriseIntegration from './EnterpriseIntegration'
 
 export default function RecruiterDashboard() {
   const { user, logout } = useAuth()
   const { assessments, responses, addAssessment, getResponsesForAssessment: getAssessmentResponses } = useData()
-  const [currentView, setCurrentView] = useState<'dashboard' | 'create' | 'assessment' | 'review'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'create' | 'creative' | 'advanced' | 'multimodal' | 'assistant' | 'enterprise' | 'assessment' | 'review'>('dashboard')
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null)
   const [newAssessmentData, setNewAssessmentData] = useState<any>(null)
   const [selectedResponse, setSelectedResponse] = useState<any>(null)
@@ -22,6 +27,26 @@ export default function RecruiterDashboard() {
 
   const handleCreateAssessment = () => {
     setCurrentView('create')
+  }
+
+  const handleCreateCreativeAssessment = () => {
+    setCurrentView('creative')
+  }
+
+  const handleCreateAdvancedAssessment = () => {
+    setCurrentView('advanced')
+  }
+
+  const handleCreateMultiModalAssessment = () => {
+    setCurrentView('multimodal')
+  }
+
+  const handleAIAssistant = () => {
+    setCurrentView('assistant')
+  }
+
+  const handleEnterpriseIntegration = () => {
+    setCurrentView('enterprise')
   }
 
   const handleAssessmentGenerated = (data: any) => {
@@ -47,6 +72,41 @@ export default function RecruiterDashboard() {
         onBack={() => setCurrentView('dashboard')}
       />
     )
+  }
+
+  if (currentView === 'creative') {
+    return (
+      <CreativeAssessmentForm 
+        onAssessmentGenerated={handleAssessmentGenerated}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    )
+  }
+
+  if (currentView === 'advanced') {
+    return (
+      <AdvancedAssessmentBuilder
+        onSave={handleAssessmentGenerated}
+        onBack={() => setCurrentView('dashboard')}
+      />
+    )
+  }
+
+  if (currentView === 'multimodal') {
+    return (
+      <MultiModalAssessmentBuilder
+        onSave={handleAssessmentGenerated}
+        onCancel={() => setCurrentView('dashboard')}
+      />
+    )
+  }
+
+  if (currentView === 'assistant') {
+    return <RecruiterAIAssistant />
+  }
+
+  if (currentView === 'enterprise') {
+    return <EnterpriseIntegration />
   }
 
   if (currentView === 'assessment' && (newAssessmentData || selectedAssessment)) {
@@ -92,6 +152,20 @@ export default function RecruiterDashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={handleAIAssistant}
+                className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              >
+                <span className="mr-1">🤖</span>
+                AI Assistant
+              </button>
+              <button
+                onClick={handleEnterpriseIntegration}
+                className="flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+              >
+                <span className="mr-1">🏢</span>
+                Enterprise
+              </button>
               <span className="text-sm text-gray-700">Welcome, {user?.name}</span>
               <button
                 onClick={logout}
@@ -173,13 +247,36 @@ export default function RecruiterDashboard() {
         {/* Action Buttons */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">My Assessments</h2>
-          <button
-            onClick={handleCreateAssessment}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Assessment
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleCreateAssessment}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Traditional
+            </button>
+            <button
+              onClick={handleCreateCreativeAssessment}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-colors flex items-center"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Create AI-Powered
+            </button>
+            <button
+              onClick={handleCreateAdvancedAssessment}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Advanced Builder
+            </button>
+            <button
+              onClick={handleCreateMultiModalAssessment}
+              className="bg-gradient-to-r from-green-600 to-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:from-green-700 hover:to-teal-700 transition-colors flex items-center"
+            >
+              <span className="mr-2">🎥</span>
+              Video/Audio
+            </button>
+          </div>
         </div>
 
         {/* Assessments List */}

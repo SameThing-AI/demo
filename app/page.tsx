@@ -1,260 +1,182 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Brain, Target, Users, Zap, ArrowRight, CheckCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import AuthForm from '@/components/AuthForm'
-import RecruiterDashboard from '@/components/RecruiterDashboard'
-import CandidateDashboard from '@/components/CandidateDashboard'
-import AssessmentForm from '@/components/AssessmentForm'
-import AssessmentDisplay from '@/components/AssessmentDisplay'
-import TakeAssessment from '@/components/TakeAssessment'
-import AssessmentResults from '@/components/AssessmentResults'
-import ReviewAssessment from '@/components/ReviewAssessment'
+import { Brain, Target, Users, Zap, ArrowRight, CheckCircle, Video, BarChart3, Bot } from 'lucide-react'
+import Link from 'next/link'
+import Navigation from '@/components/Navigation'
 
-export default function Home() {
-  const { user, login, isAuthenticated } = useAuth()
-  const [currentStep, setCurrentStep] = useState<'landing' | 'form' | 'assessment' | 'take' | 'results' | 'review'>('landing')
-  const [assessmentData, setAssessmentData] = useState<any>(null)
-  const [results, setResults] = useState<any>(null)
-  const [showDemo, setShowDemo] = useState(false)
-
-  // If user is authenticated, show their dashboard
-  if (isAuthenticated && user && !showDemo) {
-    if (user.type === 'recruiter') {
-      return <RecruiterDashboard />
-    } else {
-      return <CandidateDashboard />
+export default function LandingPage() {
+  const features = [
+    {
+      icon: Brain,
+      title: 'AI-Powered Assessment Generation',
+      description: 'Create dynamic, role-specific assessments using advanced AI technology'
+    },
+    {
+      icon: Target,
+      title: 'Adaptive Question Engine',
+      description: 'Questions that evolve based on candidate responses for deeper insights'
+    },
+    {
+      icon: Video,
+      title: 'Multi-Modal Evaluation',
+      description: 'Video and audio assessments with AI-powered analysis'
+    },
+    {
+      icon: Users,
+      title: 'Enterprise Integration',
+      description: 'Seamless integration with ATS systems and compliance management'
+    },
+    {
+      icon: Bot,
+      title: 'AI Coaching & Mentorship',
+      description: 'Personalized learning paths and recruiter assistance'
+    },
+    {
+      icon: BarChart3,
+      title: 'Advanced Analytics',
+      description: 'Comprehensive insights and performance tracking'
     }
-  }
+  ]
 
-  // If not authenticated, show auth form
-  if (!isAuthenticated && !showDemo) {
-    return <AuthForm onAuth={login} />
-  }
-
-  const handleStartAssessment = () => {
-    setShowDemo(true)
-    setCurrentStep('form')
-  }
-
-  const handleBackToDashboard = () => {
-    setShowDemo(false)
-    setCurrentStep('landing')
-    setAssessmentData(null)
-    setResults(null)
-  }
-
-  const handleAssessmentGenerated = (data: any) => {
-    setAssessmentData(data)
-    setCurrentStep('assessment')
-  }
-
-  const handleTakeAssessment = () => {
-    setCurrentStep('take')
-  }
-
-  const handleAssessmentComplete = (resultsData: any) => {
-    setResults(resultsData)
-    setCurrentStep('results')
-  }
-
-  const handleStartNew = () => {
-    setCurrentStep('landing')
-    setAssessmentData(null)
-    setResults(null)
-    setShowDemo(false)
-  }
-
-  const handleReviewAssessment = () => {
-    setCurrentStep('review')
-  }
-
-  if (currentStep === 'form') {
-    return (
-      <AssessmentForm 
-        onAssessmentGenerated={handleAssessmentGenerated}
-        onBack={handleBackToDashboard}
-      />
-    )
-  }
-
-  if (currentStep === 'assessment') {
-    return (
-      <AssessmentDisplay 
-        assessmentData={assessmentData}
-        onBack={() => setCurrentStep('form')}
-        onTakeAssessment={handleTakeAssessment}
-      />
-    )
-  }
-
-  if (currentStep === 'take') {
-    return (
-      <TakeAssessment
-        assessmentData={assessmentData}
-        onBack={() => setCurrentStep('assessment')}
-        onComplete={handleAssessmentComplete}
-      />
-    )
-  }
-
-  if (currentStep === 'results') {
-    return (
-      <AssessmentResults
-        results={results}
-        onBack={handleReviewAssessment}
-        onStartNew={handleStartNew}
-      />
-    )
-  }
-
-  if (currentStep === 'review') {
-    return (
-      <ReviewAssessment
-        assessmentData={assessmentData}
-        results={results}
-        onBack={() => setCurrentStep('results')}
-      />
-    )
-  }
+  const assessmentTypes = [
+    { name: 'Traditional Q&A', description: 'Multiple choice, text responses, coding challenges' },
+    { name: 'Creative AI Scenarios', description: 'Dynamic role-playing and problem-solving simulations' },
+    { name: 'Self-Modifying', description: 'Adaptive assessments that evolve in real-time' },
+    { name: 'Video Interviews', description: 'AI-powered video analysis and evaluation' },
+    { name: 'Audio Assessments', description: 'Voice-based evaluations with speech analysis' },
+    { name: 'Multi-Modal', description: 'Combined video/audio assessments for comprehensive evaluation' }
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Brain className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">SameThing.AI</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              {isAuthenticated && user ? (
-                <>
-                  <span className="text-sm text-gray-700">
-                    {user.name} ({user.type})
-                  </span>
-                  <button
-                    onClick={handleBackToDashboard}
-                    className="text-blue-600 hover:text-blue-800 text-sm transition-colors"
-                  >
-                    Back to Dashboard
-                  </button>
-                </>
-              ) : (
-                <nav className="hidden md:flex space-x-8">
-                  <a href="#features" className="text-gray-600 hover:text-blue-600">Features</a>
-                  <a href="#how-it-works" className="text-gray-600 hover:text-blue-600">How it Works</a>
-                  <a href="#pricing" className="text-gray-600 hover:text-blue-600">Pricing</a>
-                </nav>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gray-900">
+      <Navigation />
+      
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center"
-        >
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            Complete AI-Powered
-            <span className="text-blue-600 block">Assessment Platform</span>
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Create custom assessments with AI, let candidates take them online, and get instant 
-            AI-powered evaluation with detailed feedback. End-to-end hiring intelligence.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleStartAssessment}
-            className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors flex items-center mx-auto"
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center"
           >
-            Create & Take Assessment Demo
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </motion.button>
-        </motion.div>
+            <div className="flex justify-center mb-8">
+              <div className="flex items-center space-x-3 bg-blue-600/20 backdrop-blur-sm border border-blue-500/30 rounded-full px-6 py-3">
+                <Brain className="h-8 w-8 text-blue-400" />
+                <span className="text-blue-400 font-semibold text-lg">AI-Powered Hiring Platform</span>
+              </div>
+            </div>
+            
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
+              Revolutionize Your
+              <span className="block bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Hiring Process
+              </span>
+            </h1>
+            
+            <p className="text-xl md:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto">
+              Create dynamic, AI-powered assessments that adapt to candidates, provide deep insights, 
+              and deliver exceptional hiring experiences for both recruiters and candidates.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/auth"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 transform hover:scale-105"
+              >
+                <span>Get Started</span>
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/demo"
+                className="border border-gray-600 hover:border-blue-500 text-white px-8 py-4 rounded-lg text-lg font-semibold flex items-center justify-center space-x-2 transition-all duration-200 hover:bg-blue-600/10"
+              >
+                <span>Try Demo</span>
+                <Zap className="h-5 w-5" />
+              </Link>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">
-          Why Choose SameThing.AI?
-        </h3>
-        <div className="grid md:grid-cols-3 gap-8">
+      <section className="py-24 bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white p-8 rounded-lg shadow-lg"
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
           >
-            <Target className="h-12 w-12 text-blue-600 mb-4" />
-            <h4 className="text-xl font-semibold text-gray-900 mb-4">Custom Assessments</h4>
-            <p className="text-gray-600">
-              AI generates tailored assessments based on job role, company culture, and requirements.
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Powered by Advanced AI Technology
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              Our platform combines cutting-edge AI with practical hiring needs to deliver 
+              the most comprehensive assessment solution available.
             </p>
           </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="bg-white p-8 rounded-lg shadow-lg"
-          >
-            <Zap className="h-12 w-12 text-blue-600 mb-4" />
-            <h4 className="text-xl font-semibold text-gray-900 mb-4">Smart Test Taking</h4>
-            <p className="text-gray-600">
-              Candidates take assessments online with real-time AI proctoring and instant evaluation.
-            </p>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="bg-white p-8 rounded-lg shadow-lg"
-          >
-            <Users className="h-12 w-12 text-blue-600 mb-4" />
-            <h4 className="text-xl font-semibold text-gray-900 mb-4">AI Evaluation</h4>
-            <p className="text-gray-600">
-              Get instant, detailed feedback and scoring powered by advanced AI analysis.
-            </p>
-          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-gray-900 border border-gray-700 rounded-xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105"
+              >
+                <div className="flex items-center mb-4">
+                  <div className="bg-blue-600/20 p-3 rounded-lg mr-4">
+                    <feature.icon className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
+                </div>
+                <p className="text-gray-300">{feature.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="bg-white py-20">
+      {/* Assessment Types Section */}
+      <section className="py-24 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            How It Works
-          </h3>
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { step: 1, title: "Create Assessment", desc: "AI generates custom questions from job description" },
-              { step: 2, title: "Candidate Takes Test", desc: "Online assessment with timer and progress tracking" },
-              { step: 3, title: "AI Evaluation", desc: "Instant scoring and detailed feedback analysis" },
-              { step: 4, title: "Hire Best Talent", desc: "Get comprehensive results and recommendations" }
-            ].map((item, index) => (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Complete Assessment Suite
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              From traditional Q&A to advanced multi-modal evaluations, 
+              our platform supports every type of assessment you need.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {assessmentTypes.map((type, index) => (
               <motion.div
-                key={item.step}
+                key={type.name}
                 initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.2 }}
-                className="text-center"
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-xl p-6"
               >
-                <div className="bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                  {item.step}
+                <div className="flex items-center mb-3">
+                  <CheckCircle className="h-5 w-5 text-green-400 mr-3" />
+                  <h3 className="text-lg font-semibold text-white">{type.name}</h3>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h4>
-                <p className="text-gray-600">{item.desc}</p>
+                <p className="text-gray-300 text-sm">{type.description}</p>
               </motion.div>
             ))}
           </div>
@@ -262,34 +184,51 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h3 className="text-3xl font-bold text-white mb-6">
-            Ready to Experience the Future of Hiring?
-          </h3>
-          <p className="text-xl text-blue-100 mb-8">
-            See the complete end-to-end AI assessment platform in action.
-          </p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleStartAssessment}
-            className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors"
+      <section className="py-24 bg-gradient-to-r from-blue-900 to-purple-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
           >
-            Try Complete Demo
-          </motion.button>
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to Transform Your Hiring?
+            </h2>
+            <p className="text-xl text-gray-200 mb-8">
+              Join forward-thinking companies using AI to make better hiring decisions
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/auth"
+                className="bg-white text-blue-900 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Start Free Trial</span>
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/demo"
+                className="border border-white/30 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>Watch Demo</span>
+                <Video className="h-5 w-5" />
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 border-t border-gray-700 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <Brain className="h-6 w-6 mr-2" />
-              <span className="text-lg font-semibold">SameThing.AI</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Brain className="h-6 w-6 text-blue-400" />
+              <span className="text-xl font-bold text-white">AI Hiring Platform</span>
             </div>
-            <p className="text-gray-400">© 2025 SameThing.AI. All rights reserved.</p>
+            <p className="text-gray-400 text-sm">
+              © 2025 AI Hiring Platform. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

@@ -2,17 +2,21 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User } from 'lucide-react'
+import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useData } from '@/contexts/DataContext'
 import TakeAssessment from './TakeAssessment'
+import InteractiveAssessment from './InteractiveAssessment'
+import SelfModifyingAssessment from './SelfModifyingAssessment'
+import MultiModalTakeAssessment from './MultiModalTakeAssessment'
+import AICoaching from './AICoaching'
 import AssessmentResults from './AssessmentResults'
 import ReviewAssessment from './ReviewAssessment'
 
 export default function CandidateDashboard() {
   const { user, logout } = useAuth()
   const { assessments, getAssessmentsForCandidate, getCandidateResponses } = useData()
-  const [currentView, setCurrentView] = useState<'dashboard' | 'take' | 'results' | 'review'>('dashboard')
+  const [currentView, setCurrentView] = useState<'dashboard' | 'take' | 'results' | 'review' | 'coaching'>('dashboard')
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null)
   const [currentResults, setCurrentResults] = useState<any>(null)
 
@@ -50,6 +54,10 @@ export default function CandidateDashboard() {
     setCurrentView('review')
   }
 
+  const handleAICoaching = () => {
+    setCurrentView('coaching')
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'bg-green-100 text-green-800'
@@ -66,13 +74,50 @@ export default function CandidateDashboard() {
   }
 
   if (currentView === 'take' && selectedAssessment) {
-    return (
-      <TakeAssessment
-        assessmentData={selectedAssessment}
-        onBack={() => setCurrentView('dashboard')}
-        onComplete={handleAssessmentComplete}
-      />
-    )
+    // Check assessment type and route appropriately
+    if (selectedAssessment.type === 'multi-modal' || selectedAssessment.modalType) {
+      return (
+        <MultiModalTakeAssessment
+          assessment={selectedAssessment}
+          onComplete={(responses) => {
+            // Convert multi-modal responses to standard format
+            const resultsData = {
+              score: Math.round(responses.reduce((sum, r) => sum + (r.analysis?.overallScore || 0), 0) / responses.length),
+              responses: responses,
+              feedback: responses.flatMap(r => r.analysis?.feedback || []),
+              assessmentId: selectedAssessment.id,
+              candidateId: user?.id,
+              completedAt: new Date().toISOString()
+            }
+            handleAssessmentComplete(resultsData)
+          }}
+        />
+      )
+    } else if (selectedAssessment.type === 'self-modifying' || selectedAssessment.selfModifying) {
+      return (
+        <SelfModifyingAssessment
+          assessmentData={selectedAssessment}
+          onBack={() => setCurrentView('dashboard')}
+          onComplete={handleAssessmentComplete}
+        />
+      )
+    } else if (selectedAssessment.creativeType || selectedAssessment.type === 'creative') {
+      return (
+        <InteractiveAssessment
+          assessmentData={selectedAssessment}
+          onBack={() => setCurrentView('dashboard')}
+          onComplete={handleAssessmentComplete}
+        />
+      )
+    } else {
+      return (
+        <TakeAssessment
+          assessmentData={selectedAssessment}
+          onBack={() => setCurrentView('dashboard')}
+          onComplete={handleAssessmentComplete}
+        />
+      )
+    }
   }
 
   if (currentView === 'results' && currentResults) {
@@ -93,6 +138,10 @@ export default function CandidateDashboard() {
         onBack={() => setCurrentView('results')}
       />
     )
+  }
+
+  if (currentView === 'coaching') {
+    return <AICoaching />
   }
 
   return (
@@ -195,6 +244,33 @@ export default function CandidateDashboard() {
           </motion.div>
         </div>
 
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-6 rounded-lg text-white">
+              <h3 className="text-xl font-semibold mb-2">AI Coaching</h3>
+              <p className="mb-4 opacity-90">Get personalized coaching based on your assessment performance</p>
+              <button
+                onClick={handleAICoaching}
+                className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+              >
+                Start Coaching
+              </button>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-500 to-teal-600 p-6 rounded-lg text-white">
+              <h3 className="text-xl font-semibold mb-2">Assessment Hub</h3>
+              <p className="mb-4 opacity-90">View all your assessments and track your progress</p>
+              <div className="text-2xl font-bold mb-1">
+                {candidateResponses.length > 0 
+                  ? Math.round(candidateResponses.reduce((sum, r) => sum + (r.score || 0), 0) / candidateResponses.length)
+                  : 0}%
+              </div>
+              <div className="text-sm opacity-75">Average Score</div>
+            </div>
+          </div>
+        </div>
+
         {/* Available Assessments */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Assessments</h2>
@@ -213,9 +289,28 @@ export default function CandidateDashboard() {
                       {assessment.title}
                     </h3>
                     <p className="text-sm text-gray-600 mb-2">{assessment.company}</p>
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Available
-                    </span>
+                    <div className="flex space-x-2">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Available
+                      </span>
+                      {(assessment.creativeType || assessment.type === 'creative') && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          AI Interactive
+                        </span>
+                      )}
+                      {(assessment.type === 'self-modifying' || assessment.selfModifying) && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800">
+                          Self-Adapting
+                        </span>
+                      )}
+                      {(assessment.type === 'multi-modal' || assessment.modalType) && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {assessment.modalType === 'video' ? '📹 Video' : 
+                           assessment.modalType === 'audio' ? '🎤 Audio' : 
+                           '🎥 Multi-Modal'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -228,10 +323,30 @@ export default function CandidateDashboard() {
                   </div>
                   <button
                     onClick={() => handleTakeAssessment(assessment)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center"
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center ${
+                      assessment.type === 'multi-modal' || assessment.modalType
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : assessment.creativeType || assessment.type === 'creative'
+                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
                   >
-                    <Play className="h-4 w-4 mr-1" />
-                    Start
+                    {assessment.type === 'multi-modal' || assessment.modalType ? (
+                      <>
+                        <span className="mr-1">🎥</span>
+                        Start Recording
+                      </>
+                    ) : assessment.creativeType || assessment.type === 'creative' ? (
+                      <>
+                        <Zap className="h-4 w-4 mr-1" />
+                        Start Interactive
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-1" />
+                        Start
+                      </>
+                    )}
                   </button>
                 </div>
               </motion.div>
