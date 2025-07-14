@@ -1,8 +1,9 @@
 'use client'
+export const dynamic = "force-dynamic"
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 import Navigation from '@/components/Navigation'
 import AICoaching from '@/components/AICoaching'
 

@@ -1,16 +1,17 @@
 'use client'
+export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Plus, FileText, Eye, Calendar, Users, BarChart3, Video, Mic, Sparkles, Code, Brain } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import Navigation from '@/components/Navigation'
 
 export default function RecruiterAssessmentsPage() {
   const { user, isAuthenticated } = useAuth()
-  const { assessments, responses, getResponsesForAssessment } = useData()
+  const { assessments, responses, getResponsesForAssessment } = useDatabaseData()
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState<'all' | 'traditional' | 'creative' | 'advanced' | 'multimodal'>('all')
 

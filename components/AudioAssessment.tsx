@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Assessment } from '../contexts/DataContext'
+import { Assessment } from '@/contexts/DatabaseDataContext'
 
 interface AudioAssessmentProps {
   assessment: Assessment

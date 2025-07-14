@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Clock, ChevronLeft, ChevronRight, CheckCircle, Save, ArrowRight } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 
 interface TakeAssessmentProps {
   assessmentData: any
@@ -14,7 +14,7 @@ interface TakeAssessmentProps {
 
 export default function TakeAssessment({ assessmentData, onBack, onComplete }: TakeAssessmentProps) {
   const { user } = useAuth()
-  const { addResponse } = useData()
+  const { createResponse } = useDatabaseData()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [timeRemaining, setTimeRemaining] = useState(assessmentData.timeLimit ? assessmentData.timeLimit * 60 : 3600)
@@ -84,13 +84,10 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
         
         // Save response to data store
         const candidateResponse = {
-          id: Date.now().toString(),
           assessmentId: assessmentData.id || Date.now().toString(),
-          candidateId: user?.id || '',
-          candidateName: user?.name || '',
-          candidateEmail: user?.email || '',
           score: results.percentage || 0,
           completedAt: new Date().toISOString(),
+          status: 'completed' as const,
           answers: Object.entries(answers).map(([questionIndex, answer]) => ({
             questionId: questionIndex,
             answer,
@@ -99,7 +96,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
           feedback: results.breakdown || {}
         }
         
-        addResponse(candidateResponse)
+        await createResponse(candidateResponse)
         onComplete(results)
       } else {
         throw new Error('Failed to evaluate assessment')
@@ -129,13 +126,10 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
       
       // Save mock response to data store
       const candidateResponse = {
-        id: Date.now().toString(),
         assessmentId: assessmentData.id || Date.now().toString(),
-        candidateId: user?.id || '',
-        candidateName: user?.name || '',
-        candidateEmail: user?.email || '',
         score: mockResults.percentage || 0,
         completedAt: new Date().toISOString(),
+        status: 'completed' as const,
         answers: Object.entries(answers).map(([questionIndex, answer]) => ({
           questionId: questionIndex,
           answer,
@@ -144,7 +138,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
         feedback: mockResults.breakdown || {}
       }
       
-      addResponse(candidateResponse)
+      await createResponse(candidateResponse)
       onComplete(mockResults)
     } finally {
       setIsSubmitting(false)

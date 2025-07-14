@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react'
 import { Assessment } from '../contexts/DataContext'
-import { useAuth } from '../contexts/AuthContext'
-import { useData } from '../contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 
 interface MultiModalAssessmentBuilderProps {
   onSave: (assessment: Assessment) => void
@@ -12,7 +12,7 @@ interface MultiModalAssessmentBuilderProps {
 
 export default function MultiModalAssessmentBuilder({ onSave, onCancel }: MultiModalAssessmentBuilderProps) {
   const { user } = useAuth()
-  const { addAssessment } = useData()
+  const { createAssessment } = useDatabaseData()
 
   const [formData, setFormData] = useState({
     title: '',
@@ -57,7 +57,7 @@ export default function MultiModalAssessmentBuilder({ onSave, onCancel }: MultiM
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const assessment: Assessment = {
       id: Date.now().toString(),
       title: formData.title,
@@ -73,7 +73,7 @@ export default function MultiModalAssessmentBuilder({ onSave, onCancel }: MultiM
       audioInstructions: formData.audioInstructions
     }
 
-    addAssessment(assessment)
+    await createAssessment(assessment)
     onSave(assessment)
   }
 

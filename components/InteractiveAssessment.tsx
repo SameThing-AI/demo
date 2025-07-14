@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Clock, CheckCircle, Save, ArrowRight, Zap, Brain } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import DynamicComponentRenderer from './DynamicComponentRenderer'
 
 interface InteractiveAssessmentProps {
@@ -15,7 +15,7 @@ interface InteractiveAssessmentProps {
 
 export default function InteractiveAssessment({ assessmentData, onBack, onComplete }: InteractiveAssessmentProps) {
   const { user } = useAuth()
-  const { addResponse } = useData()
+  const { createResponse } = useDatabaseData()
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, any>>({})
   const [timeRemaining, setTimeRemaining] = useState(assessmentData.timeLimit ? assessmentData.timeLimit * 60 : 3600)
@@ -93,7 +93,7 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
         assessmentType: 'interactive'
       }
       
-      addResponse(candidateResponse)
+      await createResponse(candidateResponse)
       onComplete(results)
     } catch (error) {
       console.error('Error evaluating interactive assessment:', error)
@@ -115,7 +115,7 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
         feedback: fallbackResults.breakdown || {}
       }
       
-      addResponse(candidateResponse)
+      await createResponse(candidateResponse)
       onComplete(fallbackResults)
     } finally {
       setIsSubmitting(false)

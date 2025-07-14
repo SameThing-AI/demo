@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Users, FileText, BarChart3, Eye, Calendar, Building, LogOut, Sparkles } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import AssessmentForm from './AssessmentForm'
 import AssessmentDisplay from './AssessmentDisplay'
 import ReviewAssessment from './ReviewAssessment'
@@ -16,14 +16,14 @@ import EnterpriseIntegration from './EnterpriseIntegration'
 
 export default function RecruiterDashboard() {
   const { user, logout } = useAuth()
-  const { assessments, responses, addAssessment, getResponsesForAssessment: getAssessmentResponses } = useData()
+  const { assessments, responses, createAssessment, getResponsesForAssessment: getAssessmentResponses } = useDatabaseData()
   const [currentView, setCurrentView] = useState<'dashboard' | 'create' | 'creative' | 'advanced' | 'multimodal' | 'assistant' | 'enterprise' | 'assessment' | 'review'>('dashboard')
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null)
   const [newAssessmentData, setNewAssessmentData] = useState<any>(null)
   const [selectedResponse, setSelectedResponse] = useState<any>(null)
 
   // Filter assessments created by current user
-  const userAssessments = assessments.filter(a => a.createdBy === user?.id)
+  const userAssessments = assessments.filter((a: any) => a.createdBy === user?.id)
 
   const handleCreateAssessment = () => {
     setCurrentView('create')
@@ -222,7 +222,7 @@ export default function RecruiterDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Avg Score</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(responses.reduce((sum, r) => sum + r.score, 0) / responses.length)}%
+                  {Math.round(responses.reduce((sum: number, r: any) => sum + r.score, 0) / responses.length)}%
                 </p>
               </div>
             </div>
@@ -281,7 +281,7 @@ export default function RecruiterDashboard() {
 
         {/* Assessments List */}
         <div className="space-y-4">
-          {userAssessments.map((assessment, index) => {
+          {userAssessments.map((assessment: any, index: number) => {
             const assessmentResponses = getAssessmentResponses(assessment.id)
             return (
               <motion.div

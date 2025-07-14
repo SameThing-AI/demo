@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Brain, Home, Users, FileText, BarChart3, Settings, LogOut, User, BookOpen, MessageSquare, Building2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 
 interface NavigationProps {
   userType?: 'recruiter' | 'candidate' | null

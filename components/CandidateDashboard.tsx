@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User, Zap } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import TakeAssessment from './TakeAssessment'
 import InteractiveAssessment from './InteractiveAssessment'
 import SelfModifyingAssessment from './SelfModifyingAssessment'
@@ -15,7 +15,7 @@ import ReviewAssessment from './ReviewAssessment'
 
 export default function CandidateDashboard() {
   const { user, logout } = useAuth()
-  const { assessments, getAssessmentsForCandidate, getCandidateResponses } = useData()
+  const { assessments, getAssessmentsForCandidate, getCandidateResponses } = useDatabaseData()
   const [currentView, setCurrentView] = useState<'dashboard' | 'take' | 'results' | 'review' | 'coaching'>('dashboard')
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null)
   const [currentResults, setCurrentResults] = useState<any>(null)

@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { useData } from '../contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 
 interface CoachingSession {
   id: string
@@ -26,7 +26,7 @@ interface LearningPath {
 
 export default function AICoaching() {
   const { user } = useAuth()
-  const { getCandidateResponses } = useData()
+  const { getCandidateResponses } = useDatabaseData()
   const [currentView, setCurrentView] = useState<'dashboard' | 'paths' | 'session' | 'analytics'>('dashboard')
   const [selectedPath, setSelectedPath] = useState<LearningPath | null>(null)
   const [selectedSession, setSelectedSession] = useState<CoachingSession | null>(null)

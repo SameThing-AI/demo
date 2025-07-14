@@ -1,8 +1,9 @@
 'use client'
+export const dynamic = "force-dynamic"
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 import Navigation from '@/components/Navigation'
 import CandidateDashboard from '@/components/CandidateDashboard'
 
@@ -15,13 +16,13 @@ export default function CandidatePage() {
       router.push('/auth')
       return
     }
-    if (user?.type !== 'candidate') {
+    if (user?.role !== 'candidate') {
       router.push('/recruiter')
       return
     }
   }, [isAuthenticated, user, router])
 
-  if (!isAuthenticated || user?.type !== 'candidate') {
+  if (!isAuthenticated || user?.role !== 'candidate') {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
@@ -31,7 +32,7 @@ export default function CandidatePage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <Navigation userType="candidate" />
+      <Navigation />
       <div className="pt-16">
         <CandidateDashboard />
       </div>

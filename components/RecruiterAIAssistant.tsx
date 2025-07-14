@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { useData } from '../contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 
 interface ChatMessage {
   id: string
@@ -27,7 +27,7 @@ interface Insight {
 
 export default function RecruiterAIAssistant() {
   const { user } = useAuth()
-  const { assessments, responses } = useData()
+  const { assessments, responses } = useDatabaseData()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [currentMessage, setCurrentMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)

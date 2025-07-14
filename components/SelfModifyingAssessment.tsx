@@ -14,8 +14,8 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import DynamicComponentRenderer from './DynamicComponentRenderer'
 import InteractiveAssessment from './InteractiveAssessment'
 
@@ -40,7 +40,7 @@ export default function SelfModifyingAssessment({
   onComplete 
 }: SelfModifyingAssessmentProps) {
   const { user } = useAuth()
-  const { addResponse } = useData()
+  const { createResponse } = useDatabaseData()
   
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, any>>({})

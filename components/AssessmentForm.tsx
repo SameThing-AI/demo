@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Loader2, Building, User, FileText } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useData } from '@/contexts/DataContext'
+import { useAuth } from '@/contexts/NextAuthContext'
+import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 
 interface AssessmentFormProps {
   onAssessmentGenerated: (data: any) => void
@@ -13,7 +13,7 @@ interface AssessmentFormProps {
 
 export default function AssessmentForm({ onAssessmentGenerated, onBack }: AssessmentFormProps) {
   const { user } = useAuth()
-  const { addAssessment } = useData()
+  const { createAssessment } = useDatabaseData()
   const [formData, setFormData] = useState({
     jobTitle: '',
     company: '',
@@ -57,7 +57,7 @@ export default function AssessmentForm({ onAssessmentGenerated, onBack }: Assess
           duration: assessmentData.timeLimit || 60
         }
         
-        addAssessment(newAssessment)
+        await createAssessment(newAssessment)
         onAssessmentGenerated(assessmentData)
       } else {
         throw new Error('Failed to generate assessment')
@@ -113,7 +113,7 @@ export default function AssessmentForm({ onAssessmentGenerated, onBack }: Assess
         duration: mockAssessment.timeLimit || 60
       }
       
-      addAssessment(newAssessment)
+      await createAssessment(newAssessment)
       onAssessmentGenerated(mockAssessment)
     } finally {
       setIsGenerating(false)
