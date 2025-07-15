@@ -221,6 +221,7 @@ export default function SelfModifyingAssessment({
       candidateEmail: user?.email || '',
       score: calculateAdaptiveScore(),
       completedAt: new Date().toISOString(),
+      status: 'completed' as const,
       answers: Object.entries(answers).map(([questionIndex, answer]) => ({
         questionId: questions[parseInt(questionIndex)]?.id || questionIndex,
         answer: typeof answer === 'object' ? JSON.stringify(answer) : answer,
@@ -236,7 +237,7 @@ export default function SelfModifyingAssessment({
       }
     }
 
-    addResponse(candidateResponse)
+    await createResponse(candidateResponse)
     onComplete(candidateResponse)
   }
 

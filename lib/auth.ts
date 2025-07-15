@@ -7,11 +7,29 @@ import bcryptjs from 'bcryptjs'
 import dbConnect from '@/lib/mongodb'
 import { User } from '@/models'
 
-const client = new MongoClient(process.env.MONGODB_URI!)
-const clientPromise = client.connect()
+// Only create MongoDB client if we have a valid connection string
+const MONGODB_URI = process.env.MONGODB_URI
+const hasValidMongoConfig = MONGODB_URI && 
+  !MONGODB_URI.includes('your-mongodb-connection-string-here') &&
+  !MONGODB_URI.includes('mongodb://localhost:27017') // Also skip default local MongoDB
+
+let client: MongoClient | null = null
+let clientPromise: Promise<MongoClient> | null = null
+
+if (hasValidMongoConfig && MONGODB_URI) {
+  try {
+    client = new MongoClient(MONGODB_URI)
+    clientPromise = client.connect()
+  } catch (error) {
+    console.warn('Failed to create MongoDB client for NextAuth:', error)
+    client = null
+    clientPromise = null
+  }
+}
 
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
+  // Only use MongoDB adapter if we have a valid configuration
+  ...(hasValidMongoConfig && client && clientPromise ? { adapter: MongoDBAdapter(clientPromise) } : {}),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -25,6 +43,12 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        // Return null if MongoDB is not configured
+        if (!hasValidMongoConfig) {
+          console.warn('Credentials login attempted but MongoDB is not configured')
           return null
         }
 
@@ -59,29 +83,32 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
-        try {
-          await dbConnect()
-          
-          // Check if user exists in our custom User model
-          let existingUser = await User.findOne({ email: user.email })
-          
-          if (!existingUser) {
-            // For new users, we'll need to determine their role
-            // This could be done through a separate onboarding flow
-            // For now, we'll create a basic user record
-            existingUser = await User.create({
-              name: user.name,
-              email: user.email,
-              image: user.image,
-              role: 'candidate', // Default role, can be changed later
-              emailVerified: new Date(),
-            })
+        // Only try to access database if MongoDB is configured
+        if (hasValidMongoConfig) {
+          try {
+            await dbConnect()
+            
+            // Check if user exists in our custom User model
+            let existingUser = await User.findOne({ email: user.email })
+            
+            if (!existingUser) {
+              // For new users, we'll need to determine their role
+              // This could be done through a separate onboarding flow
+              // For now, we'll create a basic user record
+              existingUser = await User.create({
+                name: user.name,
+                email: user.email,
+                image: user.image,
+                role: 'candidate', // Default role, can be changed later
+                emailVerified: new Date(),
+              })
+            }
+            
+            return true
+          } catch (error) {
+            console.error('Error during sign in:', error)
+            return false
           }
-          
-          return true
-        } catch (error) {
-          console.error('Error during sign in:', error)
-          return false
         }
       }
       return true
@@ -94,7 +121,7 @@ export const authOptions: NextAuthOptions = {
         session.user.company = token.company as string
         
         // If session doesn't have role but token has email, fetch from database
-        if (!session.user.role && token.email) {
+        if (!session.user.role && token.email && hasValidMongoConfig) {
           try {
             await dbConnect()
             const dbUser = await User.findOne({ email: token.email })
@@ -117,7 +144,7 @@ export const authOptions: NextAuthOptions = {
       }
       
       // If token doesn't have role but has email, fetch from database
-      if (!token.role && token.email) {
+      if (!token.role && token.email && hasValidMongoConfig) {
         try {
           await dbConnect()
           const dbUser = await User.findOne({ email: token.email })

@@ -12,7 +12,7 @@ export default function AIAssistantPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated || user?.type !== 'recruiter') {
+    if (!isAuthenticated || user?.role !== 'recruiter') {
       router.push('/auth')
     }
   }, [isAuthenticated, user, router])

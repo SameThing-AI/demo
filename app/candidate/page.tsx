@@ -8,21 +8,21 @@ import Navigation from '@/components/Navigation'
 import CandidateDashboard from '@/components/CandidateDashboard'
 
 export default function CandidatePage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && !isLoading) {
       router.push('/auth')
       return
     }
-    if (user?.role !== 'candidate') {
+    if (isAuthenticated && user?.role !== 'candidate') {
       router.push('/recruiter')
       return
     }
-  }, [isAuthenticated, user, router])
+  }, [isAuthenticated, isLoading, user, router])
 
-  if (!isAuthenticated || user?.role !== 'candidate') {
+  if (isLoading || !isAuthenticated || user?.role !== 'candidate') {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
@@ -32,7 +32,7 @@ export default function CandidatePage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <Navigation />
+      <Navigation userType="candidate" />
       <div className="pt-16">
         <CandidateDashboard />
       </div>

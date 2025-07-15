@@ -100,19 +100,24 @@ export default function Navigation({ userType }: NavigationProps) {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-gray-300">
-              <User className="h-4 w-4" />
-              <span className="text-sm">{user?.name}</span>
-              <span className="text-xs bg-blue-600 px-2 py-1 rounded capitalize">
-                {userType}
-              </span>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => window.location.href = '/profile'}
+                className="flex items-center space-x-2 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">{user?.name}</span>
+                <span className="text-xs bg-blue-600 px-2 py-1 rounded capitalize">
+                  {userType}
+                </span>
+              </button>
             </div>
             <button
               onClick={logout}
               className="flex items-center space-x-1 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
             >
               <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 import { useSession, signIn, signOut, SessionProvider } from 'next-auth/react'
 
 interface AuthContextType {
@@ -17,6 +17,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 function AuthProviderInner({ children }: { children: ReactNode }) {
   const { data: session, status, update } = useSession()
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Track initialization to prevent flickering
+  useEffect(() => {
+    if (status !== 'loading') {
+      setIsInitialized(true)
+    }
+  }, [status])
 
   const updateUserRole = async (role: 'recruiter' | 'candidate', company?: string) => {
     try {
@@ -48,6 +56,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
           ...session?.user,
           role: updatedUser.role,
           company: updatedUser.company,
+          name: updatedUser.name,
         }
       })
       
@@ -85,7 +94,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
       loginWithCredentials,
       logout,
       isAuthenticated: !!session?.user,
-      isLoading: status === 'loading',
+      isLoading: status === 'loading' || !isInitialized,
       updateUserRole,
     }}>
       {children}

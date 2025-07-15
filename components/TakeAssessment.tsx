@@ -7,31 +7,58 @@ import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 
 interface TakeAssessmentProps {
-  assessmentData: any
-  onBack: () => void
+  assessment?: any // For new usage
+  assessmentData?: any // For backward compatibility
+  onBack?: () => void
   onComplete: (results: any) => void
+  isPreview?: boolean
 }
 
-export default function TakeAssessment({ assessmentData, onBack, onComplete }: TakeAssessmentProps) {
+export default function TakeAssessment({ assessment, assessmentData, onBack, onComplete, isPreview = false }: TakeAssessmentProps) {
   const { user } = useAuth()
   const { createResponse } = useDatabaseData()
+  
+  // Use assessment or assessmentData for backward compatibility
+  const currentAssessment = assessment || assessmentData
+  
+  // Add safety checks for assessment data
+  if (!currentAssessment || !currentAssessment.questions || !Array.isArray(currentAssessment.questions)) {
+    console.error('TakeAssessment - Invalid assessment data:', currentAssessment)
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h2 className="text-xl font-bold mb-4">Assessment Not Available</h2>
+          <p className="text-gray-400 mb-6">This assessment data is not properly configured or questions are missing.</p>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+            >
+              Go Back
+            </button>
+          )}
+        </div>
+      </div>
+    )
+  }
+  
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [timeRemaining, setTimeRemaining] = useState(assessmentData.timeLimit ? assessmentData.timeLimit * 60 : 3600)
+  const [timeRemaining, setTimeRemaining] = useState(currentAssessment.duration ? currentAssessment.duration * 60 : 3600)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Timer effect
+  // Timer effect (disabled in preview mode)
   useEffect(() => {
-    if (timeRemaining > 0) {
+    if (!isPreview && timeRemaining > 0) {
       const timer = setTimeout(() => {
         setTimeRemaining(timeRemaining - 1)
       }, 1000)
       return () => clearTimeout(timer)
-    } else {
+    } else if (!isPreview && timeRemaining <= 0) {
       // Auto-submit when time runs out
       handleSubmit()
     }
-  }, [timeRemaining])
+  }, [timeRemaining, isPreview])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -47,7 +74,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
   }
 
   const handleNext = () => {
-    if (currentQuestion < assessmentData.questions.length - 1) {
+    if (currentQuestion < currentAssessment.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
     }
   }
@@ -61,11 +88,47 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
   const handleSubmit = async () => {
     setIsSubmitting(true)
     
+    // If in preview mode, skip API call and return mock data
+    if (isPreview) {
+      const mockResults = {
+        totalScore: 85,
+        maxScore: 100,
+        percentage: 85,
+        passed: true,
+        timeSpent: 0,
+        breakdown: {
+          technical: { score: 34, max: 40, percentage: 85 },
+          problemSolving: { score: 26, max: 30, percentage: 87 },
+          communication: { score: 17, max: 20, percentage: 85 },
+          cultural: { score: 8, max: 10, percentage: 80 }
+        },
+        questionScores: currentAssessment.questions.map((q: any, i: number) => ({
+          question: q.question || q.text,
+          answer: answers[i] || '',
+          score: Math.floor(Math.random() * 3) + 8, // Random score 8-10
+          feedback: 'Preview mode - actual scoring would be provided in real assessment.'
+        }))
+      }
+      
+      setTimeout(() => {
+        setIsSubmitting(false)
+        onComplete(mockResults)
+      }, 1000)
+      return
+    }
+    
     try {
       // Convert answers object to array for API compatibility
-      const answersArray = assessmentData.questions.map((_: any, index: number) => 
+      const answersArray = currentAssessment.questions.map((_: any, index: number) => 
         answers[index] || ''
       )
+      
+      // Prepare candidate profile for evaluation
+      const candidateProfile = user ? {
+        name: user.name,
+        email: user.email,
+        ...user.profile // Include any extended profile data
+      } : null
       
       const response = await fetch('/api/evaluate-assessment', {
         method: 'POST',
@@ -73,9 +136,10 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          assessmentData,
+          assessmentData: currentAssessment,
           answers: answersArray,
-          timeSpent: (assessmentData.timeLimit * 60) - timeRemaining
+          candidateProfile,
+          timeSpent: (currentAssessment.duration * 60) - timeRemaining
         }),
       })
 
@@ -84,7 +148,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
         
         // Save response to data store
         const candidateResponse = {
-          assessmentId: assessmentData.id || Date.now().toString(),
+          assessmentId: currentAssessment.id || currentAssessment._id || Date.now().toString(),
           score: results.percentage || 0,
           completedAt: new Date().toISOString(),
           status: 'completed' as const,
@@ -96,6 +160,8 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
           feedback: results.breakdown || {}
         }
         
+        console.log('Submitting candidateResponse:', candidateResponse)
+        console.log('Current assessment structure:', currentAssessment)
         await createResponse(candidateResponse)
         onComplete(results)
       } else {
@@ -109,15 +175,15 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
         maxScore: 100,
         percentage: 78,
         passed: true,
-        timeSpent: (assessmentData.timeLimit * 60) - timeRemaining,
+        timeSpent: (currentAssessment.duration * 60) - timeRemaining,
         breakdown: {
           technical: { score: 32, max: 40, percentage: 80 },
           problemSolving: { score: 24, max: 30, percentage: 80 },
           communication: { score: 14, max: 20, percentage: 70 },
           cultural: { score: 8, max: 10, percentage: 80 }
         },
-        questionScores: assessmentData.questions.map((q: any, i: number) => ({
-          question: q.question,
+        questionScores: currentAssessment.questions.map((q: any, i: number) => ({
+          question: q.question || q.text,
           answer: answers[i] || '',
           score: Math.floor(Math.random() * 3) + 7, // Random score 7-10
           feedback: 'Good understanding demonstrated with room for improvement in specific areas.'
@@ -126,7 +192,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
       
       // Save mock response to data store
       const candidateResponse = {
-        assessmentId: assessmentData.id || Date.now().toString(),
+        assessmentId: currentAssessment.id || currentAssessment._id || Date.now().toString(),
         score: mockResults.percentage || 0,
         completedAt: new Date().toISOString(),
         status: 'completed' as const,
@@ -145,8 +211,8 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
     }
   }
 
-  const progress = ((currentQuestion + 1) / assessmentData.questions.length) * 100
-  const currentQ = assessmentData.questions[currentQuestion]
+  const progress = ((currentQuestion + 1) / currentAssessment.questions.length) * 100
+  const currentQ = currentAssessment.questions[currentQuestion]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -164,9 +230,9 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
               </button>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
-                  {assessmentData.jobTitle} Assessment
+                  {currentAssessment.title || 'Assessment'}
                 </h1>
-                <p className="text-gray-600">{assessmentData.company}</p>
+                <p className="text-gray-600">{currentAssessment.company}</p>
               </div>
             </div>
             
@@ -178,7 +244,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
                 </span>
               </div>
               <div className="text-sm text-gray-500">
-                Question {currentQuestion + 1} of {assessmentData.questions.length}
+                Question {currentQuestion + 1} of {currentAssessment.questions.length}
               </div>
             </div>
           </div>
@@ -271,7 +337,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
                 Save
               </button>
               
-              {currentQuestion < assessmentData.questions.length - 1 ? (
+              {currentQuestion < currentAssessment.questions.length - 1 ? (
                 <button
                   onClick={handleNext}
                   className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -297,7 +363,7 @@ export default function TakeAssessment({ assessmentData, onBack, onComplete }: T
         <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Overview</h3>
           <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
-            {assessmentData.questions.map((_: any, index: number) => (
+            {currentAssessment.questions.map((_: any, index: number) => (
               <button
                 key={index}
                 onClick={() => setCurrentQuestion(index)}

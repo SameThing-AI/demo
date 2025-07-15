@@ -2,6 +2,7 @@ import './globals.css'
 import { Inter } from 'next/font/google'
 import { AuthProvider } from '@/contexts/NextAuthContext'
 import { DatabaseDataProvider } from '@/contexts/DatabaseDataContext'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,13 +19,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          <DatabaseDataProvider>
-            <div className="min-h-screen bg-gray-900">
-              {children}
-            </div>
-          </DatabaseDataProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <DatabaseDataProvider>
+              <div className="min-h-screen bg-gray-900">
+                {children}
+              </div>
+            </DatabaseDataProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

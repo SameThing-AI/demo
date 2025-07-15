@@ -4,22 +4,32 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus, FileText, Eye, Calendar, Users, BarChart3, Video, Mic, Sparkles, Code, Brain } from 'lucide-react'
+import { Plus, FileText, Eye, Calendar, Users, BarChart3, Sparkles } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import Navigation from '@/components/Navigation'
 
 export default function RecruiterAssessmentsPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const { assessments, responses, getResponsesForAssessment } = useDatabaseData()
   const router = useRouter()
-  const [selectedTab, setSelectedTab] = useState<'all' | 'traditional' | 'creative' | 'advanced' | 'multimodal'>('all')
+  const [selectedTab, setSelectedTab] = useState<'all' | 'traditional' | 'ai-powered'>('all')
 
   useEffect(() => {
-    if (!isAuthenticated || user?.type !== 'recruiter') {
+    if (!isAuthenticated && !isLoading) {
+      router.push('/auth')
+    } else if (isAuthenticated && user?.role !== 'recruiter') {
       router.push('/auth')
     }
-  }, [isAuthenticated, user, router])
+  }, [isAuthenticated, isLoading, user, router])
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
+      </div>
+    )
+  }
 
   // Filter assessments created by current user
   const userAssessments = assessments.filter(a => a.createdBy === user?.id)
@@ -29,52 +39,48 @@ export default function RecruiterAssessmentsPage() {
     : userAssessments.filter(a => {
         switch (selectedTab) {
           case 'traditional': return a.type === 'traditional'
-          case 'creative': return a.type === 'creative'
-          case 'advanced': return a.type === 'self-modifying'
-          case 'multimodal': return a.type === 'video' || a.type === 'audio' || a.type === 'multi-modal'
+          case 'ai-powered': return ['creative', 'self-modifying', 'video', 'audio', 'multi-modal'].includes(a.type || '')
           default: return true
         }
       })
 
   const getAssessmentIcon = (type: string | undefined) => {
     switch (type) {
-      case 'creative': return <Sparkles className="h-5 w-5 text-purple-400" />
-      case 'self-modifying': return <Code className="h-5 w-5 text-green-400" />
-      case 'video': return <Video className="h-5 w-5 text-blue-400" />
-      case 'audio': return <Mic className="h-5 w-5 text-yellow-400" />
-      case 'multi-modal': return <Brain className="h-5 w-5 text-pink-400" />
-      default: return <FileText className="h-5 w-5 text-gray-400" />
+      case 'creative': 
+      case 'self-modifying': 
+      case 'video': 
+      case 'audio': 
+      case 'multi-modal': 
+        return <Sparkles className="h-5 w-5 text-purple-400" />
+      default: 
+        return <FileText className="h-5 w-5 text-blue-400" />
     }
   }
 
   const getAssessmentTypeLabel = (type: string | undefined) => {
     switch (type) {
-      case 'creative': return 'AI Creative'
-      case 'self-modifying': return 'Advanced'
-      case 'video': return 'Video'
-      case 'audio': return 'Audio'
-      case 'multi-modal': return 'Multi-Modal'
-      default: return 'Traditional'
+      case 'creative': 
+      case 'self-modifying': 
+      case 'video': 
+      case 'audio': 
+      case 'multi-modal': 
+        return 'AI-Powered'
+      default: 
+        return 'Traditional'
     }
   }
 
   const getAssessmentTypeColor = (type: string | undefined) => {
     switch (type) {
-      case 'creative': return 'bg-purple-600/20 text-purple-400 border-purple-500/30'
-      case 'self-modifying': return 'bg-green-600/20 text-green-400 border-green-500/30'
-      case 'video': return 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-      case 'audio': return 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30'
-      case 'multi-modal': return 'bg-pink-600/20 text-pink-400 border-pink-500/30'
-      default: return 'bg-gray-600/20 text-gray-400 border-gray-500/30'
+      case 'creative': 
+      case 'self-modifying': 
+      case 'video': 
+      case 'audio': 
+      case 'multi-modal': 
+        return 'bg-purple-600/20 text-purple-400 border-purple-500/30'
+      default: 
+        return 'bg-blue-600/20 text-blue-400 border-blue-500/30'
     }
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent"></div>
-      </div>
-    )
   }
 
   return (
@@ -95,28 +101,7 @@ export default function RecruiterAssessmentsPage() {
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                <span>Traditional</span>
-              </button>
-              <button
-                onClick={() => router.push('/recruiter/assessments/creative')}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>AI Creative</span>
-              </button>
-              <button
-                onClick={() => router.push('/recruiter/assessments/advanced')}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-              >
-                <Code className="h-4 w-4" />
-                <span>Advanced</span>
-              </button>
-              <button
-                onClick={() => router.push('/recruiter/assessments/multimodal')}
-                className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-              >
-                <Brain className="h-4 w-4" />
-                <span>Multi-Modal</span>
+                <span>Create Assessment</span>
               </button>
             </div>
           </div>
@@ -126,9 +111,7 @@ export default function RecruiterAssessmentsPage() {
             {[
               { key: 'all', label: 'All Assessments' },
               { key: 'traditional', label: 'Traditional' },
-              { key: 'creative', label: 'AI Creative' },
-              { key: 'advanced', label: 'Advanced' },
-              { key: 'multimodal', label: 'Multi-Modal' }
+              { key: 'ai-powered', label: 'AI-Powered' }
             ].map((tab) => (
               <button
                 key={tab.key}

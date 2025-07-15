@@ -82,6 +82,7 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
         candidateEmail: user?.email || '',
         score: results.percentage || 0,
         completedAt: new Date().toISOString(),
+        status: 'completed' as const,
         answers: Object.entries(answers).map(([questionIndex, answer]) => ({
           questionId: questionIndex,
           answer: typeof answer === 'object' ? JSON.stringify(answer) : answer,
@@ -107,12 +108,14 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
         candidateEmail: user?.email || '',
         score: fallbackResults.percentage || 0,
         completedAt: new Date().toISOString(),
+        status: 'completed' as const,
         answers: Object.entries(answers).map(([questionIndex, answer]) => ({
           questionId: questionIndex,
           answer: typeof answer === 'object' ? JSON.stringify(answer) : answer,
           score: fallbackResults.questionScores?.[parseInt(questionIndex)]?.score || 0
         })),
-        feedback: fallbackResults.breakdown || {}
+        feedback: fallbackResults.breakdown || {},
+        assessmentType: 'interactive'
       }
       
       await createResponse(candidateResponse)

@@ -1,12 +1,159 @@
-# 🚀 SameThing.AI - AI-Powered Hiring Assessments
+# AI Hiring Assessments Platform
 
-**Revolutionizing the hiring pipeline with intelligent, custom assessments**
+A modern, production-ready AI-powered hiring assessment platform built with Next.js 14, MongoDB, and NextAuth.js. This platform enables recruiters to create custom technical evaluations and provides candidates with an interactive assessment experience.
 
-## 📋 Project Overview
+## 🚀 Features
 
-SameThing.AI is an innovative platform that addresses the broken hiring process by using AI to create compelling, role-specific assessments. Our system generates customized technical evaluations based on job descriptions, company culture, and specific requirements.
+### For Recruiters
+- **Assessment Creation**: Create Traditional or AI-Powered assessments with custom questions
+- **Candidate Management**: View and manage candidate responses and performance analytics
+- **AI-Powered Tools**: Advanced assessment builder with AI assistance
+- **Enterprise Integration**: Connect with existing HR systems
+- **Real-time Analytics**: Track assessment performance and candidate metrics
 
-## 🎯 Problem Statement
+### For Candidates
+- **Interactive Assessments**: Take assessments with dynamic, adaptive questioning
+- **AI Coaching**: Get personalized feedback and improvement suggestions
+- **Progress Tracking**: Monitor your assessment history and performance
+- **Responsive Design**: Works seamlessly across desktop and mobile devices
+
+### Security & Performance
+- **Authentication**: Dual authentication system (Google OAuth + Email/Password)
+- **Rate Limiting**: Prevents API abuse with intelligent rate limiting
+- **Security Headers**: Comprehensive security headers for production deployment
+- **Error Handling**: Robust error boundaries and graceful failure handling
+- **Optimized Build**: Production-ready with code splitting and optimization
+
+## 🛠 Tech Stack
+
+- **Framework**: Next.js 14 (App Router)
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: NextAuth.js with Google OAuth and Credentials
+- **Styling**: Tailwind CSS
+- **UI Components**: Custom components with Framer Motion animations
+- **Icons**: Lucide React
+- **Type Safety**: TypeScript throughout
+- **Security**: bcryptjs for password hashing, CSP headers
+
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- MongoDB Atlas account or local MongoDB instance
+- Google OAuth credentials (optional, for Google Sign-In)
+- OpenAI API key (for AI-powered features)
+
+## 🔧 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd ai-hiring-assessments
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Edit `.env.local` with your actual values:
+   ```bash
+   # OpenAI API Key (Required for AI features)
+   OPENAI_API_KEY=your-openai-api-key-here
+
+   # Next.js Configuration
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+   # MongoDB Configuration (Required)
+   MONGODB_URI=your-mongodb-connection-string-here
+
+   # NextAuth Configuration (Required)
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your-super-secret-nextauth-secret-key-here
+
+   # Google OAuth Configuration (Optional)
+   GOOGLE_CLIENT_ID=your-google-client-id-here
+   GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+   ```
+
+4. **Set up MongoDB**
+   - Create a MongoDB Atlas cluster or use a local instance
+   - Create a database named `hiring-assessments`
+   - Update the `MONGODB_URI` in your `.env.local`
+
+5. **Set up Google OAuth (Optional)**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable Google+ API
+   - Create OAuth 2.0 credentials
+   - Add authorized redirect URIs: `http://localhost:3000/api/auth/callback/google`
+   - Update `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env.local`
+
+## 🚀 Development
+
+1. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+2. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+3. **First-time setup**
+   - Visit the application
+   - Create an account using email/password or Google OAuth
+   - Select your role (Recruiter or Candidate) during onboarding
+
+## 🏗 Build & Deployment
+
+### Production Build
+```bash
+npm run build
+npm start
+```
+
+### Deploy to Vercel
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Set environment variables in Vercel dashboard
+4. Deploy
+
+### Deploy to Other Platforms
+The application is a standard Next.js app and can be deployed to:
+- Netlify
+- AWS (EC2, Lambda)
+- Digital Ocean
+- Railway
+- Render
+
+## 📁 Project Structure
+
+```
+├── app/                    # Next.js 14 App Router
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── candidate/         # Candidate dashboard
+│   ├── recruiter/         # Recruiter dashboard
+│   └── profile/           # User profile management
+├── components/            # Reusable React components
+├── contexts/              # React contexts for state management
+├── lib/                   # Utility functions and configurations
+├── models/                # MongoDB/Mongoose models
+└── public/                # Static assets
+```
+
+## 🔐 Security Features
+
+- **Password Security**: bcryptjs hashing with salt rounds
+- **Rate Limiting**: API endpoint protection against abuse
+- **CSRF Protection**: Built-in Next.js CSRF protection
+- **Security Headers**: XSS, clickjacking, and content-type protection
+- **Input Validation**: Comprehensive server-side validation
+- **Error Handling**: Secure error messages without information leakage
 
 - Traditional hiring processes are inefficient and often miss the best candidates
 - Generic assessments don't reflect actual job requirements

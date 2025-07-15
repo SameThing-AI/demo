@@ -12,7 +12,7 @@ export default function CandidateCoachingPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!isAuthenticated || user?.type !== 'candidate') {
+    if (!isAuthenticated || user?.role !== 'candidate') {
       router.push('/auth')
     }
   }, [isAuthenticated, user, router])

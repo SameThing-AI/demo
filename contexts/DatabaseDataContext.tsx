@@ -12,7 +12,7 @@ export interface Assessment {
   createdAt: string
   createdBy: string
   duration?: number
-  type?: 'traditional' | 'creative' | 'self-modifying' | 'video' | 'audio' | 'multi-modal'
+  type?: 'traditional' | 'ai-powered' | 'creative' | 'self-modifying' | 'video' | 'audio' | 'multi-modal'
   creativeType?: string
   scenario?: string
   concept?: any
@@ -208,7 +208,9 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create response')
+        const errorData = await response.text()
+        console.error('Response creation failed:', response.status, errorData)
+        throw new Error(`Failed to create response: ${response.status} ${errorData}`)
       }
 
       const newResponse = await response.json()
@@ -216,6 +218,7 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
       return newResponse
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('Error in createResponse:', err)
       setError(errorMessage)
       throw err
     }

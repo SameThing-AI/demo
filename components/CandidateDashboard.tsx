@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User, Zap } from 'lucide-react'
+import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User, Zap, Calendar, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import TakeAssessment from './TakeAssessment'
@@ -19,6 +19,8 @@ export default function CandidateDashboard() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'take' | 'results' | 'review' | 'coaching'>('dashboard')
   const [selectedAssessment, setSelectedAssessment] = useState<any>(null)
   const [currentResults, setCurrentResults] = useState<any>(null)
+  const [assignedAssessments, setAssignedAssessments] = useState<any[]>([])
+  const [loadingAssignments, setLoadingAssignments] = useState(true)
 
   const availableAssessments = getAssessmentsForCandidate(user?.id || '')
   const candidateResponses = getCandidateResponses(user?.id || '')
@@ -31,9 +33,50 @@ export default function CandidateDashboard() {
     }
   }).filter(Boolean)
 
-  const handleTakeAssessment = (assessment: any) => {
-    setSelectedAssessment(assessment)
+  useEffect(() => {
+    loadAssignedAssessments()
+  }, [])
+
+  const loadAssignedAssessments = async () => {
+    setLoadingAssignments(true)
+    try {
+      const response = await fetch('/api/assignments')
+      if (response.ok) {
+        const data = await response.json()
+        setAssignedAssessments(data.assignments)
+      }
+    } catch (error) {
+      console.error('Error loading assigned assessments:', error)
+    }
+    setLoadingAssignments(false)
+  }
+
+  const updateAssignmentStatus = async (assignmentId: string, status: string) => {
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assignmentId, status }),
+      })
+      
+      if (response.ok) {
+        loadAssignedAssessments() // Reload assignments
+      }
+    } catch (error) {
+      console.error('Error updating assignment status:', error)
+    }
+  }
+
+  const handleTakeAssessment = (assessment: any, assignmentId?: string) => {
+    setSelectedAssessment({ ...assessment, assignmentId })
     setCurrentView('take')
+    
+    // Update assignment status to 'started' if it's an assigned assessment
+    if (assignmentId) {
+      updateAssignmentStatus(assignmentId, 'started')
+    }
   }
 
   const handleViewResults = (assessmentWithResponse: any) => {
@@ -46,6 +89,11 @@ export default function CandidateDashboard() {
   }
 
   const handleAssessmentComplete = (resultsData: any) => {
+    // Mark assignment as completed if it was an assigned assessment
+    if (selectedAssessment?.assignmentId) {
+      updateAssignmentStatus(selectedAssessment.assignmentId, 'completed')
+    }
+    
     setCurrentResults(resultsData)
     setCurrentView('results')
   }
@@ -173,10 +221,25 @@ export default function CandidateDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-6 rounded-lg shadow-sm"
+          >
+            <div className="flex items-center">
+              <Calendar className="h-8 w-8 text-indigo-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Assigned</p>
+                <p className="text-2xl font-bold text-gray-900">{assignedAssessments.length}</p>
+              </div>
+            </div>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
             className="bg-white p-6 rounded-lg shadow-sm"
           >
             <div className="flex items-center">
@@ -191,7 +254,7 @@ export default function CandidateDashboard() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.2 }}
             className="bg-white p-6 rounded-lg shadow-sm"
           >
             <div className="flex items-center">
@@ -269,6 +332,101 @@ export default function CandidateDashboard() {
               <div className="text-sm opacity-75">Average Score</div>
             </div>
           </div>
+        </div>
+
+        {/* Assigned Assessments */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Assigned Assessments</h2>
+          {loadingAssignments ? (
+            <div className="text-center py-8">
+              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading assigned assessments...</p>
+            </div>
+          ) : assignedAssessments.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {assignedAssessments.map((assignment, index) => {
+                const assessment = assignment.assessmentId
+                const isOverdue = new Date(assignment.dueDate) < new Date()
+                const daysLeft = Math.ceil((new Date(assignment.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                
+                return (
+                  <motion.div
+                    key={assignment._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4 ${
+                      isOverdue ? 'border-red-500' : assignment.status === 'completed' ? 'border-green-500' : 'border-indigo-500'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                          {assessment.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-2">{assessment.company}</p>
+                        <p className="text-xs text-gray-500 mb-2">Assigned by: {assignment.assignedBy.name}</p>
+                        
+                        <div className="flex items-center space-x-4 text-sm">
+                          <div className="flex items-center text-gray-600">
+                            <Clock className="h-4 w-4 mr-1" />
+                            {assessment.duration}min
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                        
+                        {isOverdue && assignment.status !== 'completed' && (
+                          <div className="flex items-center text-red-600 text-sm mt-2">
+                            <AlertCircle className="h-4 w-4 mr-1" />
+                            Overdue by {Math.abs(daysLeft)} day(s)
+                          </div>
+                        )}
+                        
+                        {!isOverdue && assignment.status !== 'completed' && daysLeft <= 3 && (
+                          <div className="flex items-center text-orange-600 text-sm mt-2">
+                            <AlertCircle className="h-4 w-4 mr-1" />
+                            Due in {daysLeft} day(s)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        assignment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        assignment.status === 'started' ? 'bg-yellow-100 text-yellow-800' :
+                        isOverdue ? 'bg-red-100 text-red-800' :
+                        'bg-indigo-100 text-indigo-800'
+                      }`}>
+                        {assignment.status === 'completed' ? 'Completed' :
+                         assignment.status === 'started' ? 'In Progress' :
+                         isOverdue ? 'Overdue' : 'Assigned'}
+                      </span>
+                      
+                      {assignment.status !== 'completed' && (
+                        <button
+                          onClick={() => handleTakeAssessment(assignment.assessmentId, assignment._id)}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center space-x-2 transition-colors"
+                        >
+                          <Play className="h-4 w-4" />
+                          <span>{assignment.status === 'started' ? 'Continue' : 'Start'}</span>
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 bg-white rounded-lg shadow-sm">
+              <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Assigned Assessments</h3>
+              <p className="text-gray-600">You don't have any assessments assigned to you yet.</p>
+            </div>
+          )}
         </div>
 
         {/* Available Assessments */}

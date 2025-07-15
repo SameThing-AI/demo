@@ -1,6 +1,30 @@
 import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
 
+// Simple in-memory rate limiting (use Redis in production)
+const rateLimit = new Map()
+
+function getRateLimitKey(ip: string, path: string): string {
+  return `${ip}:${path}`
+}
+
+function isRateLimited(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now()
+  const requests = rateLimit.get(key) || []
+  
+  // Remove expired requests
+  const validRequests = requests.filter((time: number) => now - time < windowMs)
+  
+  if (validRequests.length >= limit) {
+    return true
+  }
+  
+  validRequests.push(now)
+  rateLimit.set(key, validRequests)
+  
+  return false
+}
+
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
@@ -10,8 +34,28 @@ export default withAuth(
     const isApiRoute = req.nextUrl.pathname.startsWith('/api')
     const isPublicPage = ['/', '/demo'].includes(req.nextUrl.pathname)
 
-    // Allow API routes to handle their own auth
+    // Rate limiting for API routes
     if (isApiRoute) {
+      const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown'
+      let limit = 100 // Default: 100 requests per hour
+      let windowMs = 60 * 60 * 1000 // 1 hour
+
+      if (req.nextUrl.pathname.startsWith('/api/auth/')) {
+        limit = 10 // Auth: 10 requests per 15 minutes
+        windowMs = 15 * 60 * 1000
+      } else if (req.nextUrl.pathname.startsWith('/api/user/')) {
+        limit = 50 // User operations: 50 requests per hour
+      }
+
+      const key = getRateLimitKey(ip, req.nextUrl.pathname)
+      
+      if (isRateLimited(key, limit, windowMs)) {
+        return NextResponse.json(
+          { error: 'Too many requests. Please try again later.' },
+          { status: 429 }
+        )
+      }
+      
       return NextResponse.next()
     }
 

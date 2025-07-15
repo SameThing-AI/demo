@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Brain, Mail, Lock, User, ArrowRight, Eye, EyeOff, Shield, Zap, Users } from 'lucide-react'
@@ -20,6 +20,18 @@ export default function AuthPage() {
   const { user, login: googleLogin, loginWithCredentials, isLoading } = useAuth()
   const router = useRouter()
 
+  // Show loading state while authentication is being checked
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Redirect if already logged in
   if (user) {
     if (!user.role) {
@@ -27,7 +39,14 @@ export default function AuthPage() {
     } else {
       router.push(user.role === 'recruiter' ? '/recruiter' : '/candidate')
     }
-    return null
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting...</p>
+        </div>
+      </div>
+    )
   }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -70,17 +89,6 @@ export default function AuthPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
   }
 
   return (

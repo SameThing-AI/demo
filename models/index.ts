@@ -31,6 +31,53 @@ const userSchema = new mongoose.Schema({
   emailVerified: {
     type: Date,
   },
+  // Profile fields for candidates
+  profile: {
+    firstName: String,
+    lastName: String,
+    phone: String,
+    location: String,
+    summary: String,
+    experience: String,
+    skills: [String],
+    education: String,
+    linkedinUrl: String,
+    githubUrl: String,
+    portfolioUrl: String,
+    resume: String, // URL to uploaded resume
+    preferredRoles: [String],
+    salaryExpectation: String,
+    availability: String,
+    workAuthorization: String,
+    languages: [String],
+    certifications: [String],
+    projects: [{
+      name: String,
+      description: String,
+      technologies: [String],
+      url: String,
+      startDate: Date,
+      endDate: Date,
+    }],
+    workExperience: [{
+      company: String,
+      position: String,
+      description: String,
+      startDate: Date,
+      endDate: Date,
+      current: Boolean,
+    }],
+    profileCompletion: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now,
+    },
+  },
 }, {
   timestamps: true,
 })
@@ -62,7 +109,7 @@ const assessmentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['traditional', 'creative', 'self-modifying', 'video', 'audio', 'multi-modal'],
+    enum: ['traditional', 'ai-powered', 'creative', 'self-modifying', 'video', 'audio', 'multi-modal'],
     default: 'traditional',
   },
   creativeType: String,
@@ -78,6 +125,45 @@ const assessmentSchema = new mongoose.Schema({
   },
   videoInstructions: String,
   audioInstructions: String,
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+}, {
+  timestamps: true,
+})
+
+const assessmentAssignmentSchema = new mongoose.Schema({
+  assessmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Assessment',
+    required: true,
+  },
+  candidateId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  assignedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ['assigned', 'started', 'completed', 'expired'],
+    default: 'assigned',
+  },
+  dueDate: {
+    type: Date,
+    required: true,
+  },
+  assignedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  startedAt: Date,
+  completedAt: Date,
   isActive: {
     type: Boolean,
     default: true,
@@ -136,7 +222,11 @@ const candidateResponseSchema = new mongoose.Schema({
 assessmentSchema.index({ createdBy: 1, createdAt: -1 })
 candidateResponseSchema.index({ assessmentId: 1, candidateId: 1 })
 candidateResponseSchema.index({ candidateId: 1, createdAt: -1 })
+assessmentAssignmentSchema.index({ candidateId: 1, status: 1 })
+assessmentAssignmentSchema.index({ assessmentId: 1, assignedBy: 1 })
+assessmentAssignmentSchema.index({ candidateId: 1, assessmentId: 1 }, { unique: true })
 
 export const User = mongoose.models.User || mongoose.model('User', userSchema)
 export const Assessment = mongoose.models.Assessment || mongoose.model('Assessment', assessmentSchema)
 export const CandidateResponse = mongoose.models.CandidateResponse || mongoose.model('CandidateResponse', candidateResponseSchema)
+export const AssessmentAssignment = mongoose.models.AssessmentAssignment || mongoose.model('AssessmentAssignment', assessmentAssignmentSchema)
