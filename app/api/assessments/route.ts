@@ -20,8 +20,11 @@ export async function GET(request: NextRequest) {
     let assessments
 
     if (role === 'recruiter') {
-      // Recruiters see only their own assessments
-      assessments = await Assessment.find({ createdBy: session.user.id })
+      // Recruiters see only their own active assessments
+      assessments = await Assessment.find({ 
+        createdBy: session.user.id,
+        isActive: true 
+      })
         .populate('createdBy', 'name email company')
         .sort({ createdAt: -1 })
     } else {
@@ -48,6 +51,8 @@ export async function GET(request: NextRequest) {
       modalType: assessment.modalType,
       videoInstructions: assessment.videoInstructions,
       audioInstructions: assessment.audioInstructions,
+      isActive: assessment.isActive,
+      status: assessment.status,
     }))
 
     return NextResponse.json(formattedAssessments)

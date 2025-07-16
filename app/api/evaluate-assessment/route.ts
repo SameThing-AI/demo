@@ -163,9 +163,18 @@ Respond with valid JSON only (no additional text):
     // Parse the AI response
     let evaluationResults
     try {
-      evaluationResults = JSON.parse(aiResponse)
+      // Clean the AI response - remove markdown code blocks if present
+      let cleanResponse = aiResponse.trim()
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      evaluationResults = JSON.parse(cleanResponse)
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError)
+      console.error('Raw AI response:', aiResponse)
       // If parsing fails, create a fallback evaluation
       evaluationResults = createFallbackEvaluation(assessmentData, answers, timeSpent, candidateProfile)
     }

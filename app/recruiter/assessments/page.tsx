@@ -4,16 +4,23 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Plus, FileText, Eye, Calendar, Users, BarChart3, Sparkles } from 'lucide-react'
+import { 
+  Plus, FileText, Eye, Calendar, Users, BarChart3, Sparkles,
+  Trash2, Archive, CheckSquare, Square, MoreVertical, Edit,
+  XCircle, PlayCircle, Download, Filter
+} from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import Navigation from '@/components/Navigation'
 
 export default function RecruiterAssessmentsPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
-  const { assessments, responses, getResponsesForAssessment } = useDatabaseData()
+  const { assessments, responses, getResponsesForAssessment, fetchAssessments } = useDatabaseData()
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState<'all' | 'traditional' | 'ai-powered'>('all')
+  const [selectedAssessments, setSelectedAssessments] = useState<string[]>([])
+  const [bulkActionLoading, setBulkActionLoading] = useState(false)
+  const [showBulkActions, setShowBulkActions] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
@@ -39,13 +46,14 @@ export default function RecruiterAssessmentsPage() {
     : userAssessments.filter(a => {
         switch (selectedTab) {
           case 'traditional': return a.type === 'traditional'
-          case 'ai-powered': return ['creative', 'self-modifying', 'video', 'audio', 'multi-modal'].includes(a.type || '')
+          case 'ai-powered': return a.type === 'ai-powered' || ['creative', 'self-modifying', 'video', 'audio', 'multi-modal'].includes(a.type || '')
           default: return true
         }
       })
 
   const getAssessmentIcon = (type: string | undefined) => {
     switch (type) {
+      case 'ai-powered':
       case 'creative': 
       case 'self-modifying': 
       case 'video': 
@@ -59,6 +67,7 @@ export default function RecruiterAssessmentsPage() {
 
   const getAssessmentTypeLabel = (type: string | undefined) => {
     switch (type) {
+      case 'ai-powered':
       case 'creative': 
       case 'self-modifying': 
       case 'video': 
@@ -72,6 +81,7 @@ export default function RecruiterAssessmentsPage() {
 
   const getAssessmentTypeColor = (type: string | undefined) => {
     switch (type) {
+      case 'ai-powered':
       case 'creative': 
       case 'self-modifying': 
       case 'video': 
@@ -80,6 +90,125 @@ export default function RecruiterAssessmentsPage() {
         return 'bg-purple-600/20 text-purple-400 border-purple-500/30'
       default: 
         return 'bg-blue-600/20 text-blue-400 border-blue-500/30'
+    }
+  }
+
+  // Bulk action handlers
+  const handleSelectAll = () => {
+    if (selectedAssessments.length === filteredAssessments.length) {
+      setSelectedAssessments([])
+    } else {
+      setSelectedAssessments(filteredAssessments.map(a => a.id))
+    }
+  }
+
+  const handleSelectAssessment = (assessmentId: string) => {
+    setSelectedAssessments(prev => 
+      prev.includes(assessmentId) 
+        ? prev.filter(id => id !== assessmentId)
+        : [...prev, assessmentId]
+    )
+  }
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedAssessments.length === 0) {
+      alert('Please select assessments first')
+      return
+    }
+
+    const actionNames: { [key: string]: string } = {
+      delete: 'delete',
+      close: 'close',
+      activate: 'activate',
+      archive: 'archive'
+    }
+
+    if (!confirm(`Are you sure you want to ${actionNames[action]} ${selectedAssessments.length} assessment(s)?`)) {
+      return
+    }
+
+    setBulkActionLoading(true)
+    try {
+      const response = await fetch('/api/assessments/bulk-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action,
+          assessmentIds: selectedAssessments
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(data.message)
+        setSelectedAssessments([])
+        // Refresh the data from the server
+        await fetchAssessments()
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error performing bulk action:', error)
+      alert('An error occurred while performing the action')
+    } finally {
+      setBulkActionLoading(false)
+    }
+  }
+
+  const handleExportSelected = () => {
+    const selectedData = filteredAssessments.filter(a => selectedAssessments.includes(a.id))
+    const dataStr = JSON.stringify(selectedData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `assessments-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleIndividualAction = async (action: string, assessmentId: string) => {
+    const actionNames: { [key: string]: string } = {
+      delete: 'delete',
+      close: 'close',
+      activate: 'activate',
+      archive: 'archive'
+    }
+
+    if (!confirm(`Are you sure you want to ${actionNames[action]} this assessment?`)) {
+      return
+    }
+
+    setBulkActionLoading(true)
+    try {
+      const response = await fetch('/api/assessments/bulk-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action,
+          assessmentIds: [assessmentId]
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(data.message)
+        // Refresh the data from the server
+        await fetchAssessments()
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error performing action:', error)
+      alert('An error occurred while performing the action')
+    } finally {
+      setBulkActionLoading(false)
     }
   }
 
@@ -96,6 +225,17 @@ export default function RecruiterAssessmentsPage() {
               <p className="text-gray-400">Create, manage, and analyze your assessments</p>
             </div>
             <div className="mt-4 lg:mt-0 flex flex-wrap gap-3">
+              {selectedAssessments.length > 0 && (
+                <div className="flex items-center space-x-2 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2">
+                  <span className="text-gray-300 text-sm">{selectedAssessments.length} selected</span>
+                  <button
+                    onClick={() => setShowBulkActions(!showBulkActions)}
+                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
               <button
                 onClick={() => router.push('/recruiter/assessments/create')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
@@ -105,6 +245,58 @@ export default function RecruiterAssessmentsPage() {
               </button>
             </div>
           </div>
+
+          {/* Bulk Actions Panel */}
+          {showBulkActions && selectedAssessments.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6"
+            >
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => handleBulkAction('activate')}
+                  disabled={bulkActionLoading}
+                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <PlayCircle className="h-4 w-4" />
+                  <span>Activate</span>
+                </button>
+                <button
+                  onClick={() => handleBulkAction('close')}
+                  disabled={bulkActionLoading}
+                  className="bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Close</span>
+                </button>
+                <button
+                  onClick={() => handleBulkAction('archive')}
+                  disabled={bulkActionLoading}
+                  className="bg-gray-600 hover:bg-gray-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <Archive className="h-4 w-4" />
+                  <span>Archive</span>
+                </button>
+                <button
+                  onClick={handleExportSelected}
+                  disabled={bulkActionLoading}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Export</span>
+                </button>
+                <button
+                  onClick={() => handleBulkAction('delete')}
+                  disabled={bulkActionLoading}
+                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
 
           {/* Filter Tabs */}
           <div className="flex space-x-1 mb-8 bg-gray-800 p-1 rounded-lg w-fit">
@@ -179,8 +371,27 @@ export default function RecruiterAssessmentsPage() {
 
           {/* Assessments List */}
           <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-700">
-              <h2 className="text-xl font-semibold text-white">Your Assessments</h2>
+            <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <h2 className="text-xl font-semibold text-white">Your Assessments</h2>
+                {filteredAssessments.length > 0 && (
+                  <button
+                    onClick={handleSelectAll}
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+                  >
+                    {selectedAssessments.length === filteredAssessments.length ? (
+                      <CheckSquare className="h-4 w-4" />
+                    ) : (
+                      <Square className="h-4 w-4" />
+                    )}
+                    <span className="text-sm">Select All</span>
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Filter className="h-4 w-4 text-gray-400" />
+                <span className="text-gray-400 text-sm">{filteredAssessments.length} assessments</span>
+              </div>
             </div>
             
             {filteredAssessments.length === 0 ? (
@@ -209,25 +420,53 @@ export default function RecruiterAssessmentsPage() {
                       key={assessment.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-6 hover:bg-gray-750 transition-colors"
+                      className={`p-6 hover:bg-gray-750 transition-colors ${
+                        selectedAssessments.includes(assessment.id) ? 'bg-blue-900/20 border-l-4 border-blue-500' : ''
+                      }`}
                     >
                       <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            {getAssessmentIcon(assessment.type)}
-                            <h3 className="text-lg font-semibold text-white">{assessment.title}</h3>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getAssessmentTypeColor(assessment.type)}`}>
-                              {getAssessmentTypeLabel(assessment.type)}
-                            </span>
-                          </div>
-                          <p className="text-gray-400 text-sm mb-3">{assessment.description}</p>
-                          <div className="flex items-center space-x-6 text-sm text-gray-500">
-                            <span>{assessment.questions?.length || 0} questions</span>
-                            <span>{assessmentResponses.length} responses</span>
-                            <span>Avg. score: {avgScore}%</span>
-                            <span>Created {new Date(assessment.createdAt).toLocaleDateString()}</span>
+                        <div className="flex items-start space-x-4 flex-1">
+                          {/* Selection Checkbox */}
+                          <button
+                            onClick={() => handleSelectAssessment(assessment.id)}
+                            className="mt-1 text-gray-400 hover:text-white transition-colors"
+                          >
+                            {selectedAssessments.includes(assessment.id) ? (
+                              <CheckSquare className="h-5 w-5 text-blue-400" />
+                            ) : (
+                              <Square className="h-5 w-5" />
+                            )}
+                          </button>
+
+                          {/* Assessment Info */}
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              {getAssessmentIcon(assessment.type)}
+                              <h3 className="text-lg font-semibold text-white">{assessment.title}</h3>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getAssessmentTypeColor(assessment.type)}`}>
+                                {getAssessmentTypeLabel(assessment.type)}
+                              </span>
+                              {(assessment as any).status && (assessment as any).status !== 'active' && (
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  (assessment as any).status === 'closed' ? 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30' :
+                                  (assessment as any).status === 'archived' ? 'bg-gray-600/20 text-gray-400 border-gray-500/30' :
+                                  'bg-green-600/20 text-green-400 border-green-500/30'
+                                }`}>
+                                  {(assessment as any).status}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-400 text-sm mb-3">{assessment.company}</p>
+                            <div className="flex items-center space-x-6 text-sm text-gray-500">
+                              <span>{assessment.questions?.length || 0} questions</span>
+                              <span>{assessmentResponses.length} responses</span>
+                              <span>Avg. score: {avgScore}%</span>
+                              <span>Created {new Date(assessment.createdAt).toLocaleDateString()}</span>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Action Buttons */}
                         <div className="flex items-center space-x-2 ml-6">
                           <button
                             onClick={() => router.push(`/recruiter/assessments/${assessment.id}`)}
@@ -245,6 +484,56 @@ export default function RecruiterAssessmentsPage() {
                               <span>Responses</span>
                             </button>
                           )}
+                          
+                          {/* Individual Actions Dropdown */}
+                          <div className="relative group">
+                            <button className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition-colors">
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                              <div className="py-1">
+                                <button
+                                  onClick={() => router.push(`/recruiter/assessments/${assessment.id}/edit`)}
+                                  className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center space-x-2"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  <span>Edit</span>
+                                </button>
+                                {(assessment as any).status !== 'active' ? (
+                                  <button
+                                    onClick={() => handleIndividualAction('activate', assessment.id)}
+                                    className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center space-x-2"
+                                  >
+                                    <PlayCircle className="h-4 w-4" />
+                                    <span>Activate</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleIndividualAction('close', assessment.id)}
+                                    className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center space-x-2"
+                                  >
+                                    <XCircle className="h-4 w-4" />
+                                    <span>Close</span>
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleIndividualAction('archive', assessment.id)}
+                                  className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center space-x-2"
+                                >
+                                  <Archive className="h-4 w-4" />
+                                  <span>Archive</span>
+                                </button>
+                                <hr className="border-gray-700 my-1" />
+                                <button
+                                  onClick={() => handleIndividualAction('delete', assessment.id)}
+                                  className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors flex items-center space-x-2"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

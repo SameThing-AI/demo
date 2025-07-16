@@ -4,10 +4,11 @@ export const dynamic = "force-dynamic"
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Edit, Play, Share, Eye, Clock, Users, FileText, Sparkles, UserPlus, X, Calendar, Search } from 'lucide-react'
+import { ArrowLeft, Edit, Play, Share, Eye, Clock, Users, FileText, Sparkles, UserPlus, X, Calendar, Search, Trash2, Archive, XCircle, PlayCircle, Download, MoreVertical } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import Navigation from '@/components/Navigation'
+import JobDescriptionFormatter from '@/components/JobDescriptionFormatter'
 
 export default function ViewAssessmentPage() {
   const { user, isAuthenticated } = useAuth()
@@ -38,12 +39,35 @@ export default function ViewAssessmentPage() {
     if (foundAssessment) {
       setAssessment(foundAssessment)
       loadAssignments()
+      setLoading(false)
     } else {
-      // Assessment not found in local data, could fetch from API
-      console.log('Assessment not found:', assessmentId)
+      // Assessment not found in local data, try to fetch from API
+      fetchAssessmentById()
     }
-    setLoading(false)
   }, [isAuthenticated, user, router, assessmentId, assessments])
+
+  const fetchAssessmentById = async () => {
+    try {
+      const response = await fetch(`/api/assessments/${assessmentId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setAssessment(data)
+        loadAssignments()
+      } else if (response.status === 404) {
+        // Assessment not found or has been deleted
+        alert('Assessment not found or has been deleted.')
+        router.push('/recruiter/assessments')
+      } else {
+        console.error('Error fetching assessment:', response.statusText)
+        router.push('/recruiter/assessments')
+      }
+    } catch (error) {
+      console.error('Error fetching assessment:', error)
+      router.push('/recruiter/assessments')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadCandidates = async () => {
     setLoadingCandidates(true)
@@ -156,6 +180,78 @@ export default function ViewAssessmentPage() {
     }
   }
 
+  const handleAssessmentAction = async (action: string) => {
+    const actionNames: { [key: string]: string } = {
+      delete: 'delete',
+      close: 'close',
+      activate: 'activate',
+      archive: 'archive'
+    }
+
+    if (!confirm(`Are you sure you want to ${actionNames[action]} this assessment?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/assessments/bulk-actions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action,
+          assessmentIds: [assessment.id]
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(data.message)
+        
+        if (action === 'delete') {
+          // Redirect to assessments list after deletion
+          router.push('/recruiter/assessments')
+        } else {
+          // Refresh the page to show updated data
+          window.location.reload()
+        }
+      } else {
+        const error = await response.json()
+        alert(`Error: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error performing action:', error)
+      alert('An error occurred while performing the action')
+    }
+  }
+
+  const handleEditAssessment = () => {
+    // For now, navigate to a basic edit page (could be enhanced later)
+    router.push(`/recruiter/assessments/${assessment.id}/edit`)
+  }
+
+  const handleExportAssessment = () => {
+    const assessmentData = {
+      ...assessment,
+      responses: responses.map(r => ({
+        ...r,
+        candidateName: r.candidateName,
+        candidateEmail: r.candidateEmail,
+        score: r.score,
+        completedAt: r.completedAt
+      }))
+    }
+    
+    const dataStr = JSON.stringify(assessmentData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `assessment-${assessment.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (!isAuthenticated || loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -199,15 +295,15 @@ export default function ViewAssessmentPage() {
       <div className="pt-24 pb-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
+          <div className="mb-8">
+            <div className="flex items-center space-x-4 mb-6">
               <button
                 onClick={() => router.push('/recruiter/assessments')}
                 className="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg transition-colors"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   {getAssessmentIcon(assessment.type)}
                   <h1 className="text-3xl font-bold text-white">{assessment.title}</h1>
@@ -215,22 +311,25 @@ export default function ViewAssessmentPage() {
                     {getAssessmentTypeLabel(assessment.type)}
                   </span>
                 </div>
-                <p className="text-gray-400">{assessment.description}</p>
+                <p className="text-gray-400">{assessment.company}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Primary Actions */}
               <button
                 onClick={openAssignModal}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
               >
-                <UserPlus className="h-4 w-4" />
+                <UserPlus className="h-5 w-5" />
                 <span>Assign to Candidates</span>
               </button>
               <button
                 onClick={() => router.push(`/recruiter/assessments/${assessment.id}/preview`)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
               >
-                <Play className="h-4 w-4" />
+                <Play className="h-5 w-5" />
                 <span>Preview</span>
               </button>
               <button
@@ -239,17 +338,79 @@ export default function ViewAssessmentPage() {
                   navigator.clipboard.writeText(shareUrl)
                   alert('Assessment link copied to clipboard!')
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
               >
-                <Share className="h-4 w-4" />
+                <Share className="h-5 w-5" />
                 <span>Share</span>
               </button>
+
+              {/* Management Actions */}
+              <button
+                onClick={handleEditAssessment}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Edit</span>
+              </button>
+
+              {/* Status Actions */}
+              {(assessment as any).status !== 'active' ? (
+                <button
+                  onClick={() => handleAssessmentAction('activate')}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <PlayCircle className="h-4 w-4" />
+                  <span>Activate</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAssessmentAction('close')}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <XCircle className="h-4 w-4" />
+                  <span>Close</span>
+                </button>
+              )}
+
+              {/* More Actions Dropdown */}
+              <div className="relative group">
+                <button className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <div className="py-1">
+                    <button
+                      onClick={handleExportAssessment}
+                      className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center space-x-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Export Data</span>
+                    </button>
+                    <button
+                      onClick={() => handleAssessmentAction('archive')}
+                      className="w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors flex items-center space-x-2"
+                    >
+                      <Archive className="h-4 w-4" />
+                      <span>Archive</span>
+                    </button>
+                    <hr className="border-gray-700 my-1" />
+                    <button
+                      onClick={() => handleAssessmentAction('delete')}
+                      className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors flex items-center space-x-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete Assessment</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {responses.length > 0 && (
                 <button
                   onClick={() => router.push(`/recruiter/assessments/${assessment.id}/responses`)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors font-medium"
                 >
-                  <Users className="h-4 w-4" />
+                  <Users className="h-5 w-5" />
                   <span>View Responses</span>
                 </button>
               )}
@@ -390,6 +551,14 @@ export default function ViewAssessmentPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Job Description */}
+              <JobDescriptionFormatter
+                jobDescription={assessment.description || ''}
+                jobTitle={assessment.title}
+                company={assessment.company}
+                assessmentId={assessment.id}
+              />
 
               {/* AI Features (if applicable) */}
               {assessment.type === 'ai-powered' && (

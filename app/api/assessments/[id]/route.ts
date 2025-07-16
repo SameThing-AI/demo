@@ -20,7 +20,7 @@ export async function GET(
     const assessment = await Assessment.findById(params.id)
       .populate('createdBy', 'name email company')
 
-    if (!assessment) {
+    if (!assessment || !assessment.isActive) {
       return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
     }
 
@@ -46,6 +46,8 @@ export async function GET(
       modalType: assessment.modalType,
       videoInstructions: assessment.videoInstructions,
       audioInstructions: assessment.audioInstructions,
+      isActive: assessment.isActive,
+      status: assessment.status,
     }
 
     return NextResponse.json(formattedAssessment)

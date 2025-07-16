@@ -13,6 +13,8 @@ A modern, production-ready AI-powered hiring assessment platform built with Next
 
 ### For Candidates
 - **Interactive Assessments**: Take assessments with dynamic, adaptive questioning
+- **AI Assessment Chatbot**: Get strategic AI guidance during assessments with limited credits per question
+- **Profile Management**: Comprehensive profile builder with LinkedIn import support
 - **AI Coaching**: Get personalized feedback and improvement suggestions
 - **Progress Tracking**: Monitor your assessment history and performance
 - **Responsive Design**: Works seamlessly across desktop and mobile devices
@@ -23,6 +25,24 @@ A modern, production-ready AI-powered hiring assessment platform built with Next
 - **Security Headers**: Comprehensive security headers for production deployment
 - **Error Handling**: Robust error boundaries and graceful failure handling
 - **Optimized Build**: Production-ready with code splitting and optimization
+
+## 🤖 AI Assessment Chatbot
+
+Our innovative AI Assessment Chatbot provides candidates with strategic AI assistance during assessments, simulating modern work environments where AI tools are commonly used.
+
+### Key Features:
+- **Strategic Credit System**: Each question provides credits based on difficulty (Easy: 2, Medium: 3, Hard: 4)
+- **Guided Learning**: AI provides hints and guidance without giving direct answers
+- **Context-Aware**: Understands job role, description, and specific assessment questions
+- **Real-world Simulation**: Reflects actual workplace scenarios where AI assistance is available
+- **Fair Evaluation**: Encourages strategic thinking and effective resource utilization
+
+### How it Works:
+1. Candidates see available AI credits for each question
+2. They can chat with the AI assistant for guidance and hints
+3. The AI helps with problem-solving approach without providing direct answers
+4. Credits are consumed with each AI interaction
+5. Candidates must balance AI assistance with independent thinking
 
 ## 🛠 Tech Stack
 

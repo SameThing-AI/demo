@@ -95,6 +95,10 @@ const assessmentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  jobAnalysis: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
   questions: [{
     type: mongoose.Schema.Types.Mixed,
   }],
@@ -128,6 +132,11 @@ const assessmentSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true,
+  },
+  status: {
+    type: String,
+    enum: ['active', 'closed', 'archived', 'draft'],
+    default: 'active',
   },
 }, {
   timestamps: true,

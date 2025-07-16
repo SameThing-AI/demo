@@ -117,6 +117,12 @@ export default function PreviewAssessmentPage() {
                   <li>• This assessment includes AI-powered features for enhanced evaluation</li>
                 )}
               </ul>
+              <div className="mt-4 p-3 bg-blue-600/20 border border-blue-500/30 rounded-lg">
+                <p className="text-blue-400 text-sm">
+                  <strong>Note:</strong> You're in preview mode. AI chatbot features are disabled in preview. 
+                  Candidates will see an AI assistant button with question-specific credits during actual assessments.
+                </p>
+              </div>
             </div>
           </div>
 

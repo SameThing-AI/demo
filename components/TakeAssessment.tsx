@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Clock, ChevronLeft, ChevronRight, CheckCircle, Save, ArrowRight } from 'lucide-react'
+import { ArrowLeft, Clock, ChevronLeft, ChevronRight, CheckCircle, Save, ArrowRight, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
+import AssessmentChatbot from './AssessmentChatbot'
 
 interface TakeAssessmentProps {
   assessment?: any // For new usage
@@ -46,6 +47,21 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [timeRemaining, setTimeRemaining] = useState(currentAssessment.duration ? currentAssessment.duration * 60 : 3600)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [questionCredits, setQuestionCredits] = useState<Record<number, number>>({})
+
+  // Initialize credits for each question based on difficulty
+  useEffect(() => {
+    if (currentAssessment.questions) {
+      const initialCredits: Record<number, number> = {}
+      currentAssessment.questions.forEach((question: any, index: number) => {
+        // Assign credits based on difficulty
+        const difficulty = question.difficulty?.toLowerCase() || 'medium'
+        const credits = difficulty === 'easy' ? 2 : difficulty === 'medium' ? 3 : 4
+        initialCredits[index] = credits
+      })
+      setQuestionCredits(initialCredits)
+    }
+  }, [currentAssessment.questions])
 
   // Timer effect (disabled in preview mode)
   useEffect(() => {
@@ -70,6 +86,13 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
     setAnswers(prev => ({
       ...prev,
       [questionIndex]: answer
+    }))
+  }
+
+  const handleCreditsChange = (questionIndex: number, newCredits: number) => {
+    setQuestionCredits(prev => ({
+      ...prev,
+      [questionIndex]: newCredits
     }))
   }
 
@@ -288,6 +311,10 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
                 }`}>
                   {currentQ.difficulty}
                 </span>
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 flex items-center space-x-1">
+                  <Zap className="h-3 w-3" />
+                  <span>{questionCredits[currentQuestion] || 0} AI Credits</span>
+                </span>
               </div>
             </div>
             
@@ -314,6 +341,15 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
             />
             <p className="text-sm text-gray-500 mt-2">
               💡 Provide a detailed explanation with examples where applicable.
+              {!isPreview && questionCredits[currentQuestion] > 0 && (
+                <> 🤖 <strong>AI Assistant Available:</strong> Look for the blue chatbot button (bottom-right) - you have {questionCredits[currentQuestion]} credits for this question!</>
+              )}
+              {!isPreview && questionCredits[currentQuestion] === 0 && (
+                <> 🤖 No AI credits remaining for this question.</>
+              )}
+              {isPreview && (
+                <> 🤖 AI Assistant disabled in preview mode - candidates will see it with {questionCredits[currentQuestion] || 0} credits.</>
+              )}
             </p>
           </div>
 
@@ -361,7 +397,17 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
 
         {/* Question Overview */}
         <div className="bg-white rounded-lg shadow-lg p-6 mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Progress Overview</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Progress Overview</h3>
+            {!isPreview && (
+              <div className="text-sm text-gray-600 flex items-center space-x-2">
+                <Zap className="h-4 w-4 text-blue-600" />
+                <span>
+                  Total AI Credits: {Object.values(questionCredits).reduce((sum, credits) => sum + credits, 0)}
+                </span>
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
             {currentAssessment.questions.map((_: any, index: number) => (
               <button
@@ -379,7 +425,17 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
               </button>
             ))}
           </div>
-        </div>
+        </div>        {/* AI Chatbot */}
+        {!isPreview && Object.keys(questionCredits).length > 0 && (
+          <AssessmentChatbot
+            question={currentQ.question}
+            jobRole={currentAssessment.title}
+            jobDescription={currentAssessment.description}
+            questionDifficulty={currentQ.difficulty}
+            maxCredits={questionCredits[currentQuestion] || 0}
+            onCreditsChange={(newCredits) => handleCreditsChange(currentQuestion, newCredits)}
+          />
+        )}
       </div>
     </div>
   )

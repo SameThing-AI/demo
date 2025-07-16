@@ -100,8 +100,18 @@ Return the response in the following JSON format:
     // Parse the AI response
     let assessmentData
     try {
-      assessmentData = JSON.parse(aiResponse)
+      // Clean the AI response - remove markdown code blocks if present
+      let cleanResponse = aiResponse.trim()
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      assessmentData = JSON.parse(cleanResponse)
     } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError)
+      console.error('Raw AI response:', aiResponse)
       // If parsing fails, return a fallback assessment
       assessmentData = createFallbackAssessment(jobTitle, company)
     }
