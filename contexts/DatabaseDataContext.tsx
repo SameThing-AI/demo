@@ -20,6 +20,17 @@ export interface Assessment {
   modalType?: 'video' | 'audio' | 'both'
   videoInstructions?: string
   audioInstructions?: string
+  
+  // Revolutionary assessment fields
+  assessmentType?: string
+  revolutionaryTitle?: string
+  scenarios?: any[]
+  instructions?: string
+  totalTime?: number
+  timeLimit?: number
+  aiAssistanceMode?: string
+  uniqueFeatures?: string[]
+  criteria?: any
 }
 
 export interface CandidateResponse {

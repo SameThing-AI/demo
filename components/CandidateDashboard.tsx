@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User, Zap, Calendar, AlertCircle } from 'lucide-react'
+import { FileText, Clock, Trophy, Star, Eye, Play, CheckCircle, LogOut, User, Zap, Calendar, AlertCircle, Cpu, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import TakeAssessment from './TakeAssessment'
@@ -367,6 +367,24 @@ export default function CandidateDashboard() {
                         <p className="text-sm text-gray-600 mb-2">{assessment.company}</p>
                         <p className="text-xs text-gray-500 mb-2">Assigned by: {assignment.assignedBy.name}</p>
                         
+                        {/* Revolutionary Assessment Indicators for Assigned Assessments */}
+                        {(assessment.assessmentType === 'revolutionary' || 
+                          (assessment.scenarios && assessment.scenarios.length > 0) || 
+                          assessment.questions?.some((q: any) => q.scenario?.type === 'simulation')) && (
+                          <div className="flex items-center space-x-2 mb-2">
+                            <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full flex items-center">
+                              <Zap className="h-3 w-3 mr-1" />
+                              Revolutionary
+                            </span>
+                            {assessment.scenarios?.some((s: any) => s.type === 'simulation') && (
+                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full flex items-center">
+                                <Cpu className="h-3 w-3 mr-1" />
+                                Live Simulation
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
                         <div className="flex items-center space-x-4 text-sm">
                           <div className="flex items-center text-gray-600">
                             <Clock className="h-4 w-4 mr-1" />
@@ -447,6 +465,31 @@ export default function CandidateDashboard() {
                       {assessment.title}
                     </h3>
                     <p className="text-sm text-gray-600 mb-2">{assessment.company}</p>
+                    
+                    {/* Revolutionary Assessment Indicators */}
+                    {(assessment.assessmentType === 'revolutionary' || 
+                      (assessment.scenarios && assessment.scenarios.length > 0) || 
+                      assessment.questions?.some((q: any) => q.scenario?.type === 'simulation')) && (
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full flex items-center">
+                          <Zap className="h-3 w-3 mr-1" />
+                          Revolutionary
+                        </span>
+                        {assessment.scenarios?.some((s: any) => s.type === 'simulation') && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full flex items-center">
+                            <Cpu className="h-3 w-3 mr-1" />
+                            Live Simulation
+                          </span>
+                        )}
+                        {assessment.uniqueFeatures?.includes('plot-twists') && (
+                          <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full flex items-center">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Plot Twists
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="flex space-x-2">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Available

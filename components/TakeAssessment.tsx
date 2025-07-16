@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Clock, ChevronLeft, ChevronRight, CheckCircle, Save, ArrowRight, Zap } from 'lucide-react'
+import { ArrowLeft, Clock, ChevronLeft, ChevronRight, CheckCircle, Save, ArrowRight, Zap, Cpu } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import AssessmentChatbot from './AssessmentChatbot'
+import LiveSimulationEngine from './LiveSimulationEngine'
 
 interface TakeAssessmentProps {
   assessment?: any // For new usage
@@ -48,8 +49,16 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
   const [timeRemaining, setTimeRemaining] = useState(currentAssessment.duration ? currentAssessment.duration * 60 : 3600)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [questionCredits, setQuestionCredits] = useState<Record<number, number>>({})
-
-  // Initialize credits for each question based on difficulty
+  const [isLiveSimulation, setIsLiveSimulation] = useState(false)
+  
+  // Check if current question supports live simulation
+  const currentQuestionData = currentAssessment.questions[currentQuestion]
+  const shouldUseLiveSimulation = currentQuestionData?.scenario && 
+    (currentQuestionData.scenario.type === 'simulation' || 
+     currentQuestionData.scenario.type === 'technical-mystery' || 
+     currentQuestionData.scenario.type === 'interactive-code-simulation' ||
+     currentQuestionData.scenario.difficulty === 'Impossible') && 
+    !isPreview
   useEffect(() => {
     if (currentAssessment.questions) {
       const initialCredits: Record<number, number> = {}
@@ -237,6 +246,30 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
   const progress = ((currentQuestion + 1) / currentAssessment.questions.length) * 100
   const currentQ = currentAssessment.questions[currentQuestion]
 
+  // 🚀 LIVE SIMULATION MODE for revolutionary scenarios
+  if (shouldUseLiveSimulation && isLiveSimulation && currentQuestionData?.scenario) {
+    return (
+      <LiveSimulationEngine
+        scenario={currentQuestionData.scenario}
+        onComplete={(simulationResults) => {
+          // Store simulation results as answer
+          setAnswers(prev => ({
+            ...prev,
+            [currentQuestion]: JSON.stringify(simulationResults)
+          }))
+          
+          // Move to next question or complete assessment
+          if (currentQuestion < currentAssessment.questions.length - 1) {
+            setCurrentQuestion(currentQuestion + 1)
+          } else {
+            handleSubmit()
+          }
+        }}
+        onBack={onBack || (() => {})}
+      />
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -260,6 +293,21 @@ export default function TakeAssessment({ assessment, assessmentData, onBack, onC
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Live Simulation Toggle */}
+              {shouldUseLiveSimulation && (
+                <button
+                  onClick={() => setIsLiveSimulation(!isLiveSimulation)}
+                  className={`flex items-center px-3 py-1 rounded-lg text-sm transition-colors ${
+                    isLiveSimulation 
+                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  <Cpu className="h-4 w-4 mr-1" />
+                  {isLiveSimulation ? 'Live Sim ON' : 'Live Sim OFF'}
+                </button>
+              )}
+              
               <div className="flex items-center text-gray-600">
                 <Clock className="h-5 w-5 mr-2" />
                 <span className={`font-mono text-lg ${timeRemaining < 300 ? 'text-red-600' : ''}`}>

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic"
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, Clock, FileText } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, Zap, Cpu, AlertTriangle, Eye, Play } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import { useDatabaseData } from '@/contexts/DatabaseDataContext'
 import Navigation from '@/components/Navigation'
@@ -18,6 +18,7 @@ export default function PreviewAssessmentPage() {
 
   const [assessment, setAssessment] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [previewMode, setPreviewMode] = useState<'standard' | 'simulation'>('standard')
 
   useEffect(() => {
     if (!isAuthenticated || user?.role !== 'recruiter') {
@@ -32,6 +33,12 @@ export default function PreviewAssessmentPage() {
     }
     setLoading(false)
   }, [isAuthenticated, user, router, assessmentId, assessments])
+
+  // Check if this is a revolutionary assessment
+  const isRevolutionaryAssessment = assessment?.assessmentType === 'revolutionary' || 
+                                   assessment?.liveSimulation || 
+                                   assessment?.plotTwists ||
+                                   assessment?.revolutionaryFeatures
 
   if (!isAuthenticated || loading) {
     return (
@@ -77,14 +84,65 @@ export default function PreviewAssessmentPage() {
                 <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                 <span className="text-yellow-400 font-medium">Preview Mode</span>
                 <span className="text-gray-400 text-sm">You are previewing this assessment as a candidate would see it</span>
+                
+                {/* Revolutionary Assessment Indicators */}
+                {isRevolutionaryAssessment && (
+                  <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center bg-purple-100/20 text-purple-400 rounded-full px-2 py-1">
+                      <Zap className="h-3 w-3 mr-1" />
+                      <span className="text-xs font-medium">Revolutionary</span>
+                    </div>
+                    {assessment.liveSimulation && (
+                      <div className="flex items-center bg-blue-100/20 text-blue-400 rounded-full px-2 py-1">
+                        <Cpu className="h-3 w-3 mr-1" />
+                        <span className="text-xs font-medium">Live Simulation</span>
+                      </div>
+                    )}
+                    {assessment.plotTwists && (
+                      <div className="flex items-center bg-orange-100/20 text-orange-400 rounded-full px-2 py-1">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        <span className="text-xs font-medium">Plot Twists</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <button
-                onClick={() => router.push(`/recruiter/assessments/${assessmentId}`)}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Exit Preview</span>
-              </button>
+              <div className="flex items-center space-x-3">
+                {/* Preview Mode Toggle for Revolutionary Assessments */}
+                {isRevolutionaryAssessment && (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setPreviewMode('standard')}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        previewMode === 'standard' 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Eye className="h-3 w-3 mr-1 inline" />
+                      Standard
+                    </button>
+                    <button
+                      onClick={() => setPreviewMode('simulation')}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                        previewMode === 'simulation' 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      <Play className="h-3 w-3 mr-1 inline" />
+                      Live Simulation
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={() => router.push(`/recruiter/assessments/${assessmentId}`)}
+                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Exit Preview</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -116,23 +174,73 @@ export default function PreviewAssessmentPage() {
                 {assessment.type === 'ai-powered' && (
                   <li>• This assessment includes AI-powered features for enhanced evaluation</li>
                 )}
+                {isRevolutionaryAssessment && (
+                  <>
+                    <li>• 🚀 This is a <strong>Revolutionary Assessment</strong> with advanced simulation features</li>
+                    {assessment.liveSimulation && (
+                      <li>• 💻 Includes live, executable environments for real-time problem solving</li>
+                    )}
+                    {assessment.plotTwists && (
+                      <li>• ⚡ Features dynamic plot twists that adapt based on your performance</li>
+                    )}
+                    {assessment.realTimeMetrics && (
+                      <li>• 📊 Real-time performance metrics track your progress</li>
+                    )}
+                    {assessment.adaptiveDifficulty && (
+                      <li>• 🎯 Adaptive difficulty adjusts to your skill level</li>
+                    )}
+                  </>
+                )}
               </ul>
+              
+              {/* Preview Mode Information */}
               <div className="mt-4 p-3 bg-blue-600/20 border border-blue-500/30 rounded-lg">
                 <p className="text-blue-400 text-sm">
-                  <strong>Note:</strong> You're in preview mode. AI chatbot features are disabled in preview. 
-                  Candidates will see an AI assistant button with question-specific credits during actual assessments.
+                  <strong>Note:</strong> You're in preview mode. {previewMode === 'simulation' ? 'Live simulation preview shows reduced functionality.' : 'AI chatbot features are disabled in preview.'} 
+                  Candidates will see {isRevolutionaryAssessment ? 'full revolutionary features including live simulation engines' : 'an AI assistant button with question-specific credits'} during actual assessments.
                 </p>
               </div>
+
+              {/* Revolutionary Features Preview */}
+              {isRevolutionaryAssessment && previewMode === 'simulation' && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg">
+                  <h4 className="text-purple-400 font-medium mb-2 flex items-center">
+                    <Zap className="h-4 w-4 mr-2" />
+                    🚀 Revolutionary Simulation Preview
+                  </h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h5 className="text-white font-medium mb-1">Live Features:</h5>
+                      <ul className="text-gray-400 space-y-1">
+                        <li>• Real-time code execution</li>
+                        <li>• Interactive environments</li>
+                        <li>• Dynamic scenario generation</li>
+                        <li>• Live performance tracking</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="text-white font-medium mb-1">Advanced Capabilities:</h5>
+                      <ul className="text-gray-400 space-y-1">
+                        <li>• Plot twist scenarios</li>
+                        <li>• Adaptive difficulty scaling</li>
+                        <li>• Multi-environment support</li>
+                        <li>• Innovation scoring</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Assessment Content */}
           {assessment.questions && assessment.questions.length > 0 ? (
             <TakeAssessment 
-              assessment={assessment} 
+              assessment={assessment}
+              assessmentData={assessment} // Pass full assessment data for revolutionary features
               isPreview={true}
               onComplete={(responses) => {
-                alert('Preview completed! In a real assessment, responses would be saved.')
+                alert(`Preview completed! ${isRevolutionaryAssessment ? 'Revolutionary features were simulated.' : 'In a real assessment, responses would be saved.'}`)
                 console.log('Preview responses:', responses)
               }}
             />

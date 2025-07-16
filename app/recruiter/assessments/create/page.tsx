@@ -1,16 +1,19 @@
 'use client'
 export const dynamic = "force-dynamic"
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/NextAuthContext'
 import Navigation from '@/components/Navigation'
 import AssessmentForm from '@/components/AssessmentForm'
+import AssessmentDisplay from '@/components/AssessmentDisplay'
 
 export default function CreateAssessmentPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
+  const [currentView, setCurrentView] = useState<'form' | 'preview'>('form')
+  const [generatedAssessment, setGeneratedAssessment] = useState<any>(null)
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
@@ -29,11 +32,20 @@ export default function CreateAssessmentPage() {
   }
 
   const handleAssessmentGenerated = (assessmentData: any) => {
-    console.log('Assessment saved:', assessmentData)
-    router.push('/recruiter/assessments')
+    console.log('🎉 Revolutionary assessment created:', assessmentData)
+    setGeneratedAssessment(assessmentData)
+    setCurrentView('preview')
   }
 
   const handleBack = () => {
+    if (currentView === 'preview') {
+      setCurrentView('form')
+    } else {
+      router.push('/recruiter/assessments')
+    }
+  }
+
+  const handleFinish = () => {
     router.push('/recruiter/assessments')
   }
 
@@ -53,17 +65,41 @@ export default function CreateAssessmentPage() {
                 <ArrowLeft className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-white">Create Assessment</h1>
-                <p className="text-gray-400">Design your assessment with traditional or AI-powered features</p>
+                <h1 className="text-3xl font-bold text-white">
+                  {currentView === 'form' ? 'Create Assessment' : '🎉 Revolutionary Assessment Created!'}
+                </h1>
+                <p className="text-gray-400">
+                  {currentView === 'form' 
+                    ? 'Design your assessment with AI-powered revolutionary features' 
+                    : 'Preview your extraordinary AI-generated assessment'
+                  }
+                </p>
               </div>
             </div>
+            {currentView === 'preview' && (
+              <button
+                onClick={handleFinish}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+              >
+                Finish & Save
+              </button>
+            )}
           </div>
 
-          {/* Assessment Form */}
-          <AssessmentForm 
-            onAssessmentGenerated={handleAssessmentGenerated}
-            onBack={handleBack}
-          />
+          {/* Content */}
+          {currentView === 'form' ? (
+            <AssessmentForm 
+              onAssessmentGenerated={handleAssessmentGenerated}
+              onBack={handleBack}
+            />
+          ) : (
+            <AssessmentDisplay
+              assessmentData={generatedAssessment}
+              onBack={handleBack}
+              onTakeAssessment={() => {}} // Not needed in create flow
+              hideTestButtons={true}
+            />
+          )}
         </div>
       </div>
     </div>

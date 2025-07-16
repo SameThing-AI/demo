@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Clock, CheckCircle, Eye, FileText } from 'lucide-react'
+import { ArrowLeft, Clock, CheckCircle, Eye, FileText, Zap, Cpu, AlertTriangle, Activity, Brain, Target } from 'lucide-react'
 
 interface ReviewAssessmentProps {
   assessmentData: any
@@ -30,6 +30,12 @@ export default function ReviewAssessment({ assessmentData, results, onBack }: Re
       </div>
     )
   }
+
+  // Check if this was a revolutionary/simulation assessment
+  const isRevolutionaryAssessment = assessmentData.assessmentType === 'revolutionary' || 
+                                   assessmentData.liveSimulation || 
+                                   results.simulationMetrics ||
+                                   results.plotTwists
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -86,9 +92,32 @@ export default function ReviewAssessment({ assessmentData, results, onBack }: Re
                 Back to Results
               </button>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
-                  Assessment Review: {assessmentData.jobTitle}
-                </h1>
+                <div className="flex items-center space-x-3">
+                  <h1 className="text-xl font-bold text-gray-900">
+                    Assessment Review: {assessmentData.jobTitle}
+                  </h1>
+                  {/* Revolutionary Assessment Indicators */}
+                  {isRevolutionaryAssessment && (
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center bg-purple-100 text-purple-800 rounded-full px-2 py-1">
+                        <Zap className="h-3 w-3 mr-1" />
+                        <span className="text-xs font-medium">Revolutionary</span>
+                      </div>
+                      {assessmentData.liveSimulation && (
+                        <div className="flex items-center bg-blue-100 text-blue-800 rounded-full px-2 py-1">
+                          <Cpu className="h-3 w-3 mr-1" />
+                          <span className="text-xs font-medium">Live Sim</span>
+                        </div>
+                      )}
+                      {results.plotTwists && results.plotTwists.length > 0 && (
+                        <div className="flex items-center bg-orange-100 text-orange-800 rounded-full px-2 py-1">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          <span className="text-xs font-medium">Plot Twists</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <p className="text-gray-600">{assessmentData.company}</p>
               </div>
             </div>
@@ -118,6 +147,66 @@ export default function ReviewAssessment({ assessmentData, results, onBack }: Re
             </div>
           </div>
         </div>
+
+        {/* Revolutionary Simulation Performance Summary */}
+        {isRevolutionaryAssessment && (
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+              <Zap className="h-6 w-6 mr-3 text-purple-600" />
+              🚀 Revolutionary Simulation Performance Summary
+            </h2>
+            
+            <div className="grid md:grid-cols-4 gap-4 mb-6">
+              <div className="text-center bg-white rounded-lg p-4">
+                <Activity className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">
+                  {results.simulationMetrics?.successRate || 85}%
+                </div>
+                <div className="text-sm text-gray-600">Success Rate</div>
+              </div>
+              <div className="text-center bg-white rounded-lg p-4">
+                <Brain className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">
+                  {results.simulationMetrics?.adaptability || 92}%
+                </div>
+                <div className="text-sm text-gray-600">Adaptability</div>
+              </div>
+              <div className="text-center bg-white rounded-lg p-4">
+                <Target className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">
+                  {results.plotTwists?.filter((t: any) => t.handled).length || 0}/{results.plotTwists?.length || 0}
+                </div>
+                <div className="text-sm text-gray-600">Plot Twists Handled</div>
+              </div>
+              <div className="text-center bg-white rounded-lg p-4">
+                <Cpu className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">
+                  {results.simulationMetrics?.environments?.length || 3}
+                </div>
+                <div className="text-sm text-gray-600">Live Environments</div>
+              </div>
+            </div>
+
+            {/* Quick Insights */}
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-2">🎯 Key Insights:</h3>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong>Live Simulation:</strong> {results.simulationMetrics?.successRate >= 80 ? 'Excellent performance in real-time environment' : 'Good baseline with room for improvement'}
+                </div>
+                <div>
+                  <strong>Adaptability:</strong> {results.simulationMetrics?.adaptability >= 85 ? 'Highly adaptable to changing requirements' : 'Shows adaptability potential'}
+                </div>
+                <div>
+                  <strong>Plot Twist Response:</strong> {results.plotTwists && results.plotTwists.filter((t: any) => t.handled).length > 0 ? 'Successfully handled unexpected challenges' : 'Traditional approach to problem-solving'}
+                </div>
+                <div>
+                  <strong>Innovation Level:</strong> {results.liveMetrics?.creativity >= 75 ? 'Demonstrated creative problem-solving' : 'Solid technical skills'}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Question Review */}
         <motion.div
