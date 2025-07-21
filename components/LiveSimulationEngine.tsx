@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Play, Code, Terminal, Eye, Zap, Cpu, Database, Globe, Settings, RefreshCw,
   Brain, Target, AlertTriangle, CheckCircle, XCircle, Activity, Layers,
-  GitBranch, Bug, Rocket, Shield, Clock, Users, BarChart3, Lightbulb, ArrowLeft
+  GitBranch, Bug, Rocket, Shield, Clock, Users, BarChart3, Lightbulb
 } from 'lucide-react'
 
 interface LiveSimulationEngineProps {
@@ -56,18 +56,16 @@ export default function LiveSimulationEngine({ scenario, onComplete, onBack }: L
   const simulationWorkerRef = useRef<Worker | null>(null)
 
   useEffect(() => {
-    if (currentPhase === 'environment') {
-      generateLiveEnvironment()
-      initializeSimulationWorker()
-      startLiveMetricsTracking()
-    }
+    generateLiveEnvironment()
+    initializeSimulationWorker()
+    startLiveMetricsTracking()
     
     return () => {
       if (simulationWorkerRef.current) {
         simulationWorkerRef.current.terminate()
       }
     }
-  }, [currentPhase, scenario])
+  }, [scenario])
 
   useEffect(() => {
     if (timeRemaining > 0 && currentPhase === 'environment') {
@@ -83,6 +81,7 @@ export default function LiveSimulationEngine({ scenario, onComplete, onBack }: L
       self.onmessage = function(e) {
         const { code, environment, state } = e.data
         try {
+          // Create a safe execution context
           const context = {
             console: {
               log: (...args) => self.postMessage({type: 'log', data: args.join(' ')}),
@@ -95,6 +94,7 @@ export default function LiveSimulationEngine({ scenario, onComplete, onBack }: L
             JSON: JSON
           }
           
+          // Execute code safely
           const result = new Function(...Object.keys(context), code)(...Object.values(context))
           self.postMessage({type: 'result', data: result || 'Code executed successfully'})
         } catch (error) {
@@ -152,15 +152,26 @@ export default function LiveSimulationEngine({ scenario, onComplete, onBack }: L
             outputs: [],
             errors: [],
             metrics: {}
+          },
+          {
+            id: 'terminal',
+            type: 'terminal',
+            code: envData.terminalCode || '',
+            state: { commands: [], history: [] },
+            outputs: [],
+            errors: [],
+            metrics: {}
           }
         ]
         
         setEnvironments(newEnvironments)
         setActiveEnvironment('main')
-        setSimulationState(envData.initialState || { initialized: true })
+        setSimulationState(envData.initialState)
         setCandidateCode(envData.starterCode || generateStarterCode())
         setPlotTwists(envData.plotTwists || generateDefaultPlotTwists())
         setTimeRemaining(envData.timeLimit || 1800)
+        
+        setCurrentPhase('environment')
       }
     } catch (error) {
       console.error('Failed to generate environment:', error)
@@ -174,7 +185,7 @@ export default function LiveSimulationEngine({ scenario, onComplete, onBack }: L
     const fallbackEnv: SimulationEnvironment = {
       id: 'fallback',
       type: 'code',
-      code: 'console.log("Interactive simulation environment ready!")',
+      code: generateFallbackCode(scenario),
       state: { initialized: true, data: [], metrics: {} },
       outputs: [],
       errors: [],
@@ -185,6 +196,294 @@ export default function LiveSimulationEngine({ scenario, onComplete, onBack }: L
     setActiveEnvironment('fallback')
     setCandidateCode(generateStarterCode())
     setPlotTwists(generateDefaultPlotTwists())
+    setCurrentPhase('environment')
+  }
+
+  const generateFallbackCode = (scenario: any) => {
+    if (scenario.role?.toLowerCase().includes('ai') || scenario.role?.toLowerCase().includes('ml')) {
+      return `
+        // AI/ML Live Simulation Environment
+        class NeuralNetworkSimulator {
+          constructor() {
+            this.layers = []
+            this.performance = { accuracy: 0, loss: 1.0, epochs: 0 }
+            this.isCorrupted = false
+          }
+          
+          addLayer(neurons, activation = 'relu') {
+            this.layers.push({ neurons, activation, weights: this.initializeWeights(neurons) })
+            console.log(\`Added layer with \${neurons} neurons and \${activation} activation\`)
+            return this
+          }
+          
+          initializeWeights(size) {
+            return Array(size).fill(0).map(() => Math.random() * 2 - 1)
+          }
+          
+          train(epochs = 100) {
+            console.log(\`Starting training for \${epochs} epochs...\`)
+            for (let epoch = 0; epoch < epochs; epoch++) {
+              this.performance.epochs = epoch + 1
+              this.performance.accuracy = Math.min(0.95, this.performance.accuracy + (Math.random() * 0.02))
+              this.performance.loss = Math.max(0.05, this.performance.loss - (Math.random() * 0.02))
+              
+              // Simulate plot twist
+              if (epoch > 50 && Math.random() > 0.95 && !this.isCorrupted) {
+                this.triggerDataCorruption()
+              }
+            }
+            console.log(\`Training completed. Final accuracy: \${this.performance.accuracy.toFixed(3)}\`)
+            return this.performance
+          }
+          
+          triggerDataCorruption() {
+            this.isCorrupted = true
+            this.performance.accuracy *= 0.7
+            console.log('🚨 PLOT TWIST: Training data corruption detected!')
+            console.log('Model performance has degraded. Implement error correction!')
+            return this
+          }
+          
+          diagnose() {
+            return {
+              layers: this.layers.length,
+              totalParams: this.layers.reduce((sum, layer) => sum + layer.neurons, 0),
+              performance: this.performance,
+              corrupted: this.isCorrupted
+            }
+          }
+        }
+        
+        // Initialize simulation
+        const simulator = new NeuralNetworkSimulator()
+        
+        // Global API for candidate interaction
+        window.simulationAPI = {
+          getSimulator: () => simulator,
+          createModel: (layers) => {
+            layers.forEach(layer => simulator.addLayer(layer.neurons, layer.activation))
+            return simulator
+          },
+          trainModel: (epochs) => simulator.train(epochs),
+          diagnoseModel: () => simulator.diagnose(),
+          resetSimulation: () => {
+            const newSim = new NeuralNetworkSimulator()
+            return newSim
+          }
+        }
+        
+        console.log('🤖 AI Simulation Environment Ready!')
+        console.log('Available commands: simulationAPI.getSimulator(), simulationAPI.createModel([{neurons: 64, activation: "relu"}]), simulationAPI.trainModel(100)')
+      `
+    } else if (scenario.role?.toLowerCase().includes('data')) {
+      return `
+        // Data Science Live Simulation Environment
+        class QuantumDataProcessor {
+          constructor() {
+            this.quantumStates = []
+            this.entanglements = new Map()
+            this.measurements = []
+            this.coherenceTime = 100
+            this.errors = []
+          }
+          
+          createQubit(initialState = 0) {
+            const qubit = {
+              id: this.quantumStates.length,
+              state: initialState,
+              amplitude: 1.0,
+              phase: 0,
+              entangled: false
+            }
+            this.quantumStates.push(qubit)
+            console.log(\`Created qubit \${qubit.id} with initial state \${initialState}\`)
+            return qubit.id
+          }
+          
+          entangle(qubit1Id, qubit2Id) {
+            if (qubit1Id < this.quantumStates.length && qubit2Id < this.quantumStates.length) {
+              this.entanglements.set(qubit1Id, qubit2Id)
+              this.entanglements.set(qubit2Id, qubit1Id)
+              this.quantumStates[qubit1Id].entangled = true
+              this.quantumStates[qubit2Id].entangled = true
+              console.log(\`Entangled qubits \${qubit1Id} and \${qubit2Id}\`)
+            }
+          }
+          
+          measure(qubitId) {
+            if (qubitId >= this.quantumStates.length) return null
+            
+            const measurement = {
+              qubit: qubitId,
+              result: Math.random() > 0.5 ? 1 : 0,
+              timestamp: Date.now(),
+              coherence: this.coherenceTime--
+            }
+            
+            this.measurements.push(measurement)
+            
+            // Trigger decoherence plot twist
+            if (this.coherenceTime <= 20 && this.errors.length === 0) {
+              this.triggerDecoherence()
+            }
+            
+            console.log(\`Measured qubit \${qubitId}: \${measurement.result} (coherence: \${measurement.coherence})\`)
+            return measurement
+          }
+          
+          triggerDecoherence() {
+            console.log('⚡ PLOT TWIST: Quantum decoherence detected!')
+            console.log('Quantum states are becoming unstable. Implement error correction!')
+            
+            this.quantumStates.forEach(state => {
+              state.amplitude *= (0.5 + Math.random() * 0.3)
+              state.phase += Math.random() * Math.PI
+            })
+            
+            this.errors.push({
+              type: 'decoherence',
+              timestamp: Date.now(),
+              affectedQubits: this.quantumStates.length
+            })
+          }
+          
+          getSystemState() {
+            return {
+              qubits: this.quantumStates.length,
+              entanglements: this.entanglements.size / 2,
+              measurements: this.measurements.length,
+              coherenceTime: this.coherenceTime,
+              errors: this.errors.length
+            }
+          }
+        }
+        
+        // Initialize quantum processor
+        const processor = new QuantumDataProcessor()
+        
+        // Global API for candidate interaction
+        window.simulationAPI = {
+          getProcessor: () => processor,
+          createQubit: (state) => processor.createQubit(state),
+          entangleQubits: (q1, q2) => processor.entangle(q1, q2),
+          measureQubit: (id) => processor.measure(id),
+          getSystemState: () => processor.getSystemState(),
+          diagnoseErrors: () => processor.errors
+        }
+        
+        console.log('⚡ Quantum Data Processing Environment Ready!')
+        console.log('Available commands: simulationAPI.createQubit(0), simulationAPI.entangleQubits(0,1), simulationAPI.measureQubit(0)')
+      `
+    } else {
+      return `
+        // Universal Interactive Challenge Environment
+        class InteractiveChallenge {
+          constructor() {
+            this.state = { 
+              active: true, 
+              complexity: 1,
+              challenges: [],
+              solutions: []
+            }
+            this.performance = { score: 0, efficiency: 100, attempts: 0 }
+            this.plotTwists = []
+          }
+          
+          addChallenge(description, solution) {
+            const challenge = {
+              id: this.state.challenges.length,
+              description,
+              expectedSolution: solution,
+              attempts: 0,
+              solved: false
+            }
+            this.state.challenges.push(challenge)
+            console.log(\`Challenge added: \${description}\`)
+            return challenge.id
+          }
+          
+          attemptSolution(challengeId, userSolution) {
+            if (challengeId >= this.state.challenges.length) return { error: 'Invalid challenge ID' }
+            
+            const challenge = this.state.challenges[challengeId]
+            challenge.attempts++
+            this.performance.attempts++
+            
+            const isCorrect = this.validateSolution(challenge.expectedSolution, userSolution)
+            
+            if (isCorrect) {
+              challenge.solved = true
+              this.performance.score += (100 - challenge.attempts * 10)
+              console.log(\`✅ Challenge \${challengeId} solved! Score: +\${100 - challenge.attempts * 10}\`)
+              
+              // Trigger plot twist after first success
+              if (this.performance.score > 0 && this.plotTwists.length === 0) {
+                this.triggerComplexityIncrease()
+              }
+            } else {
+              this.performance.efficiency = Math.max(0, this.performance.efficiency - 5)
+              console.log(\`❌ Incorrect solution for challenge \${challengeId}. Try again!\`)
+            }
+            
+            return {
+              success: isCorrect,
+              score: this.performance.score,
+              attempts: challenge.attempts,
+              feedback: isCorrect ? 'Correct!' : 'Incorrect, try a different approach'
+            }
+          }
+          
+          validateSolution(expected, actual) {
+            // Simple validation - can be made more sophisticated
+            return typeof expected === typeof actual && 
+                   JSON.stringify(expected) === JSON.stringify(actual)
+          }
+          
+          triggerComplexityIncrease() {
+            this.state.complexity++
+            this.plotTwists.push({
+              type: 'complexity_increase',
+              description: 'Challenge complexity has increased!',
+              timestamp: Date.now()
+            })
+            console.log('🌪️ PLOT TWIST: Challenge complexity increased!')
+            console.log('New challenges will be more difficult. Adapt your strategy!')
+          }
+          
+          getStatus() {
+            return {
+              state: this.state,
+              performance: this.performance,
+              plotTwists: this.plotTwists,
+              summary: {
+                totalChallenges: this.state.challenges.length,
+                solvedChallenges: this.state.challenges.filter(c => c.solved).length,
+                averageAttempts: this.performance.attempts / Math.max(1, this.state.challenges.length)
+              }
+            }
+          }
+        }
+        
+        // Initialize challenge system
+        const challenge = new InteractiveChallenge()
+        
+        // Add sample challenges
+        challenge.addChallenge('Return the sum of two numbers', (a, b) => a + b)
+        challenge.addChallenge('Find the maximum value in an array', (arr) => Math.max(...arr))
+        
+        // Global API for candidate interaction
+        window.simulationAPI = {
+          getChallenge: () => challenge,
+          addChallenge: (desc, solution) => challenge.addChallenge(desc, solution),
+          solve: (id, solution) => challenge.attemptSolution(id, solution),
+          getStatus: () => challenge.getStatus(),
+          listChallenges: () => challenge.state.challenges.map(c => ({ id: c.id, description: c.description, solved: c.solved }))
+        }
+        
+        console.log('🎯 Interactive Challenge Environment Ready!')
+        console.log('Available commands: simulationAPI.listChallenges(), simulationAPI.solve(0, yourSolution), simulationAPI.getStatus()')
+      `
+    }
   }
 
   const generateStarterCode = () => {
@@ -216,6 +515,14 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
       code: 'console.log("⏰ Time is running out!")',
       impact: 'Adds time pressure and urgency to decision making',
       severity: 'medium'
+    },
+    {
+      id: 'data-corruption',
+      trigger: 'complexity_threshold',
+      description: 'Data corruption detected in the system!',
+      code: 'console.log("🚨 Data integrity compromised!")',
+      impact: 'Introduces errors and requires error handling',
+      severity: 'critical'
     }
   ]
 
@@ -229,7 +536,7 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
         performance: performance,
         progressScore: calculateProgressScore()
       }))
-    }, 2000)
+    }, 1000)
 
     return () => clearInterval(interval)
   }
@@ -259,14 +566,17 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
         return performance.successRate < 0.5 && executionResults.length > 3
       case 'time_pressure':
         return timeRemaining < 300 // 5 minutes
+      case 'complexity_threshold':
+        return candidateCode.length > 500
       default:
-        return Math.random() > 0.95 // 5% chance
+        return Math.random() > 0.9 // 10% chance
     }
   }
 
   const triggerPlotTwist = (twist: PlotTwist) => {
     setActivePlotTwist(twist)
     
+    // Execute plot twist code if available
     if (twist.code && simulationWorkerRef.current) {
       simulationWorkerRef.current.postMessage({
         code: twist.code,
@@ -275,9 +585,10 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
       })
     }
 
+    // Auto-clear plot twist after delay
     setTimeout(() => {
       setActivePlotTwist(null)
-    }, 15000)
+    }, 15000) // 15 seconds
   }
 
   const triggerTimeBasedPlotTwist = () => {
@@ -323,22 +634,7 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
       plotTwistsEncountered: activePlotTwist ? [activePlotTwist] : [],
       timeSpent: 1800 - timeRemaining,
       score: calculateProgressScore(),
-      finalState: simulationState,
-      simulationMetrics: {
-        successRate: Math.round(performance.successRate * 100),
-        adaptability: 90,
-        environments: environments.map(env => ({
-          name: env.id,
-          performance: 85,
-          status: 'completed'
-        }))
-      },
-      plotTwists: activePlotTwist ? [{
-        name: activePlotTwist.description,
-        handled: true,
-        responseTime: '15s',
-        impact: activePlotTwist.severity
-      }] : []
+      finalState: simulationState
     }
 
     setCurrentPhase('results')
@@ -377,18 +673,22 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <h4 className="font-medium text-gray-900 mb-2">🌟 Scenario</h4>
-            <p className="text-gray-700 text-sm">{scenario?.scenario || 'Interactive coding challenge'}</p>
+            <p className="text-gray-700 text-sm">{scenario.scenario}</p>
           </div>
           <div>
             <h4 className="font-medium text-gray-900 mb-2">👤 Your Role</h4>
-            <p className="text-gray-700 text-sm">{scenario?.role || 'Software Engineer'}</p>
+            <p className="text-gray-700 text-sm">{scenario.role}</p>
           </div>
           <div>
             <h4 className="font-medium text-gray-900 mb-2">⚠️ Constraints</h4>
             <ul className="text-gray-700 text-sm space-y-1">
-              <li>• Live environment with real-time feedback</li>
-              <li>• Dynamic plot twists that change the challenge</li>
-              <li>• Performance tracked continuously</li>
+              {scenario.constraints?.map((constraint: string, idx: number) => (
+                <li key={idx}>• {constraint}</li>
+              )) || [
+                '• Live environment with real-time feedback',
+                '• Dynamic plot twists that change the challenge',
+                '• Performance tracked continuously'
+              ]}
             </ul>
           </div>
           <div>
@@ -421,9 +721,8 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
       <div className="flex justify-center space-x-4">
         <button
           onClick={onBack}
-          className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
+          className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Assessment
         </button>
         <button
@@ -523,17 +822,8 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
                   disabled={isExecuting || !candidateCode.trim()}
                   className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 flex items-center"
                 >
-                  {isExecuting ? (
-                    <>
-                      <RefreshCw className="mr-1 h-3 w-3 animate-spin" />
-                      Executing...
-                    </>
-                  ) : (
-                    <>
-                      <Play className="mr-1 h-3 w-3" />
-                      Run Live
-                    </>
-                  )}
+                  {isExecuting ? <RefreshCw className="mr-1 h-3 w-3 animate-spin" /> : <Play className="mr-1 h-3 w-3" />}
+                  {isExecuting ? 'Executing...' : 'Run Live'}
                 </button>
                 <button
                   onClick={() => setCurrentPhase('validation')}
@@ -694,11 +984,10 @@ console.log('Available API methods:', Object.keys(window.simulationAPI || {}))
           </div>
           <div className="flex items-center justify-between p-3 bg-yellow-50 rounded">
             <span>🌪️ Plot Twist Adaptation</span>
-            {activePlotTwist ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
+            {activePlotTwist ? 
+              <CheckCircle className="h-5 w-5 text-green-500" /> : 
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            )}
+            }
           </div>
         </div>
       </div>
