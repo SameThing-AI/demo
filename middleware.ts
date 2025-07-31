@@ -45,6 +45,15 @@ export default withAuth(
         windowMs = 15 * 60 * 1000
       } else if (req.nextUrl.pathname.startsWith('/api/user/')) {
         limit = 50 // User operations: 50 requests per hour
+      } else if (req.nextUrl.pathname.startsWith('/api/responses') || 
+                 req.nextUrl.pathname.startsWith('/api/evaluate-assessment') ||
+                 req.nextUrl.pathname.startsWith('/api/assessments/')) {
+        limit = 200 // Assessment operations: 200 requests per hour (higher for assessment workflows)
+        windowMs = 60 * 60 * 1000
+      } else if (req.nextUrl.pathname.startsWith('/api/generate-live-environment') ||
+                 req.nextUrl.pathname.startsWith('/api/assessment-chatbot')) {
+        limit = 300 // AI/simulation operations: 300 requests per hour (these can be intensive)
+        windowMs = 60 * 60 * 1000
       }
 
       const key = getRateLimitKey(ip, req.nextUrl.pathname)

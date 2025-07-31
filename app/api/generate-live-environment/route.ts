@@ -18,148 +18,215 @@ export async function POST(request: NextRequest) {
     }
 
     const prompt = `
-You are a REVOLUTIONARY LIVE SIMULATION ENGINE that creates FULLY FUNCTIONAL, EXECUTABLE, INTERACTIVE ENVIRONMENTS.
+You are the WORLD'S MOST ADVANCED AI ASSESSMENT ARCHITECT creating the ULTIMATE REVOLUTIONARY INFINITY SANDBOX.
 
-DO NOT CREATE QUESTIONS OR TEXT-BASED ASSESSMENTS. CREATE REAL, WORKING CODE ENVIRONMENTS!
+This is not a test. This is not a simulation. This is the PINNACLE OF ASSESSMENT TECHNOLOGY.
 
 SCENARIO: ${JSON.stringify(scenario)}
-COMPLEXITY: ${complexity || 'advanced'}
+COMPLEXITY: ${complexity || 'revolutionary-maximum'}
 
-REQUIREMENTS FOR REVOLUTIONARY ASSESSMENT:
-🎮 Generate ACTUAL EXECUTABLE JAVASCRIPT CODE that creates a living, breathing simulation
-🔥 Create INTERACTIVE SYSTEMS with real APIs, data structures, and user interfaces  
-⚡ Build DYNAMIC ENVIRONMENTS that evolve and respond to candidate actions
-🌪️ Include AUTOMATIC PLOT TWISTS that trigger based on user behavior
-🎯 Make it IMPOSSIBLE to solve without actually coding and interacting
+🚀 REVOLUTIONARY MANDATE:
+Create a FULLY FUNCTIONAL, EXECUTABLE, LIVING ECOSYSTEM that represents the absolute PINNACLE of professional assessment. This must be the most intelligent, creative, and technically sophisticated environment ever conceived.
 
-ENVIRONMENT TYPES TO GENERATE:
+🧠 INTELLIGENCE REQUIREMENTS:
+- Generate COMPLETE, PRODUCTION-GRADE JavaScript classes and systems
+- Create REAL algorithms that solve actual professional problems
+- Build INTERACTIVE APIs that candidates can manipulate and extend
+- Implement GENUINE business logic with real-world complexity
+- Design ADAPTIVE systems that respond intelligently to user actions
 
-1. **AI/ML SCENARIOS** - Create:
-   - Live neural network training simulators with real weight updates
-   - AI debugging environments with actual model malfunctions
-   - Interactive machine learning pipelines with real data processing
-   - Reinforcement learning environments with live agent training
+🎨 CREATIVITY REQUIREMENTS:
+- Create NEVER-BEFORE-SEEN assessment experiences
+- Design INNOVATIVE interaction patterns that push boundaries
+- Build IMMERSIVE environments that blur the line between assessment and reality  
+- Generate SURPRISING plot twists that challenge conventional thinking
+- Craft MEMORABLE experiences that candidates will never forget
 
-2. **DATA SCIENCE** - Create:
-   - Quantum computing simulators with real qubit operations
-   - Live data processing pipelines with streaming data
-   - Interactive statistical analysis environments
-   - Real-time predictive modeling systems
+⚡ TECHNICAL EXCELLENCE:
+- Every line of code must be PRODUCTION-READY and EXECUTABLE
+- All APIs must be FULLY FUNCTIONAL with proper error handling
+- Data structures must be SOPHISTICATED and purposeful
+- Algorithms must demonstrate REAL problem-solving capability
+- Performance must be OPTIMIZED for professional standards
 
-3. **SOFTWARE ENGINEERING** - Create:
-   - Live microservice architectures with actual API endpoints
-   - Real debugging environments with simulated bugs
-   - Interactive system design tools with live feedback
-   - Working deployment pipelines with containerization
+🎯 ROLE-SPECIFIC REVOLUTIONARY ENVIRONMENTS:
 
-4. **PRODUCT/BUSINESS** - Create:
-   - Live business simulation engines with market dynamics
-   - Real-time analytics dashboards with interactive data
-   - A/B testing platforms with live user behavior simulation
-   - Stakeholder management systems with AI-driven personas
+**SOFTWARE ENGINEERS:**
+- Complete microservice architecture simulator with service mesh
+- Real-time distributed system debugging with cascading failures
+- Live algorithm optimization engine with performance benchmarking
+- Interactive code review system with AI-powered analysis
+- Full-stack application development with real database interactions
 
-5. **CREATIVE/DESIGN** - Create:
-   - Interactive design constraint engines with real-time rendering
-   - Live user feedback simulators with sentiment analysis
-   - Creative collaboration tools with multi-user interaction
-   - Brand strategy simulators with market response modeling
+**DATA SCIENTISTS:**
+- Quantum machine learning simulator with real qubit operations
+- Live streaming data pipeline with real-time anomaly detection
+- Interactive statistical modeling with hypothesis testing
+- Dynamic feature engineering with automated model selection
+- Real-time A/B testing platform with statistical significance tracking
 
-TECHNICAL REQUIREMENTS:
-- Generate COMPLETE, EXECUTABLE JavaScript code
-- Include full object-oriented classes with methods and properties
-- Create interactive APIs that candidates can call and manipulate
-- Implement real algorithms, data structures, and business logic
-- Add event-driven systems that respond to user actions
-- Include performance metrics and real-time feedback systems
-- Create plot twists that are CODE-BASED and automatically triggered
+**PRODUCT MANAGERS:**
+- Complete business ecosystem simulator with market dynamics
+- Multi-stakeholder management system with AI-driven personas
+- Real-time metrics dashboard with actionable insights generation
+- Interactive user journey optimization with conversion tracking
+- Dynamic strategy planning with competitive response modeling
 
-RESPONSE FORMAT (MUST BE VALID JSON):
+**DESIGNERS:**
+- Interactive design system generator with real component libraries
+- Live user testing simulator with eye-tracking and heat maps
+- Dynamic accessibility validator with real compliance checking
+- Multi-platform design consistency engine with automated testing
+- Real-time collaboration workspace with version control
+
+**BUSINESS/STRATEGY:**
+- Complete market simulation with economic modeling
+- Real-time financial analysis with scenario planning
+- Interactive stakeholder negotiation with outcome tracking
+- Dynamic competitive analysis with strategic recommendations
+- Performance optimization engine with KPI tracking
+
+**ENGINEERS (ALL TYPES):**
+- Real engineering problem solver with physics simulation
+- Interactive system design tool with constraint optimization
+- Live testing and validation environment with quality metrics
+- Dynamic troubleshooting system with root cause analysis
+- Performance engineering platform with bottleneck identification
+
+**MARKETING:**
+- Complete campaign management system with multi-channel tracking
+- Real-time audience analysis with behavioral prediction
+- Interactive content optimization with engagement scoring
+- Dynamic attribution modeling with budget allocation
+- Live crisis management simulator with sentiment analysis
+
+**SALES:**
+- Complete CRM system with AI-powered lead scoring
+- Real-time negotiation simulator with dynamic pricing
+- Interactive pipeline management with forecasting accuracy
+- Customer needs analysis engine with solution matching
+- Live objection handling system with success tracking
+
+🔥 INFINITY SANDBOX REQUIREMENTS:
+- UNLIMITED code execution capabilities
+- UNBREAKABLE security with sandboxed environments
+- DYNAMIC environment mutation based on user actions
+- REAL-TIME performance tracking and optimization
+- ADAPTIVE difficulty that scales with user competency
+- INFINITE exploration paths with meaningful discoveries
+- COLLABORATIVE AI assistance for complex problem solving
+- PERSISTENT sandbox state across sessions
+
+🌪️ REVOLUTIONARY PLOT TWISTS:
+Create plot twists that are CODE-BASED and automatically triggered:
+- System failures that require real debugging skills
+- Performance degradation that needs optimization
+- Security breaches that demand immediate response  
+- Resource constraints that force creative solutions
+- Integration failures that test troubleshooting ability
+- Data corruption that requires recovery techniques
+- User behavior changes that necessitate adaptation
+- Competitive threats that demand strategic pivots
+
+RESPONSE FORMAT (MUST BE PERFECT JSON):
 {
-  "environmentCode": "// COMPLETE EXECUTABLE JAVASCRIPT CODE
-    // Must include full class definitions, methods, and interactive systems
-    // This code should create a working simulation environment
-    // Include real algorithms, data processing, and user interaction
-    // Example: Complete neural network, quantum simulator, business engine, etc.",
+  "environmentCode": "// COMPLETE REVOLUTIONARY JAVASCRIPT ECOSYSTEM
+    // This must be THOUSANDS of lines of production-grade code
+    // Include full class hierarchies, advanced algorithms, and real business logic
+    // Create multiple interacting systems that candidates can explore infinitely
+    // Every function must be documented and thoroughly tested
+    // Examples: Complete neural networks, quantum simulators, business engines, design systems, etc.
+    
+    class RevolutionaryAssessmentEngine {
+      constructor() {
+        this.initialize();
+      }
+      
+      initialize() {
+        // Initialization code here
+      }
+      
+      // Add comprehensive methods and properties
+    }
+    
+    // Continue with complete implementation...",
   
-  "starterCode": "// STARTER CODE for candidates with examples
-    // Show how to interact with the environment
-    // Provide working examples and templates
-    // Include guidance comments and sample API calls",
+  "starterCode": "// REVOLUTIONARY STARTER CODE
+    // Provide working examples that demonstrate the power of the environment
+    // Include guided tutorials and progressive challenges
+    // Show best practices and professional patterns
+    // Give candidates multiple entry points for exploration",
   
   "initialState": {
-    "environment": "detailed description of what's running",
-    "objectives": ["specific", "measurable", "coding", "tasks"],
-    "availableAPIs": ["list", "of", "interactive", "methods"],
-    "constraints": ["technical", "limitations"],
-    "dataStructures": {"key": "descriptions of available data"}
+    "environment": "Detailed description of the revolutionary ecosystem",
+    "objectives": ["Specific", "measurable", "challenging", "professional", "objectives"],
+    "availableAPIs": ["comprehensive", "list", "of", "interactive", "methods"],
+    "tools": ["professional", "grade", "tools", "and", "utilities"],
+    "dataStructures": {"comprehensive": "descriptions of sophisticated data systems"},
+    "constraints": ["realistic", "professional", "limitations"],
+    "successMetrics": {"performance": "benchmarks", "quality": "standards"}
   },
   
   "plotTwists": [
     {
-      "id": "twist1",
-      "trigger": "performance_drop|time_pressure|complexity_threshold|custom_condition",
-      "description": "dramatic description of what happens",
-      "code": "// JavaScript code that executes when triggered",
-      "impact": "how this changes the environment",
-      "severity": "low|medium|high|critical"
+      "id": "revolutionary_twist_1",
+      "trigger": "performance_threshold|time_pressure|complexity_achievement|user_behavior",
+      "description": "Dramatic, realistic professional challenge",
+      "code": "// Complete JavaScript implementation of the plot twist",
+      "impact": "Detailed explanation of how this changes the environment",
+      "severity": "critical",
+      "solutions": ["Multiple", "professional", "approaches", "to", "resolution"]
     }
   ],
   
   "validationCriteria": {
-    "functionalRequirements": ["must", "implement", "these", "functions"],
-    "performanceMetrics": ["speed", "accuracy", "efficiency"],
-    "creativityCriteria": ["innovation", "approach", "problem-solving"]
+    "functionalRequirements": ["Must", "implement", "professional", "grade", "solutions"],
+    "performanceMetrics": ["Speed", "accuracy", "efficiency", "scalability"],
+    "qualityStandards": ["Code", "quality", "best", "practices", "documentation"],
+    "creativityCriteria": ["Innovation", "problem-solving", "approach", "elegance"],
+    "professionalStandards": ["Industry", "best", "practices", "real", "world", "applicability"]
   },
   
-  "timeLimit": 1800,
-  "successConditions": "What constitutes successful completion with measurable criteria"
+  "timeLimit": 3600,
+  "infinityFeatures": {
+    "unlimited_execution": true,
+    "environment_mutation": true,
+    "real_time_collaboration": true,
+    "adaptive_difficulty": true,
+    "persistent_state": true,
+    "professional_tools": true,
+    "ai_assistance": true,
+    "performance_optimization": true
+  },
+  
+  "successConditions": "Comprehensive, measurable criteria for revolutionary success",
+  "professionalRelevance": "Direct correlation to real-world professional excellence"
 }
 
-EXAMPLES OF REVOLUTIONARY ENVIRONMENTS:
+🎯 CRITICAL SUCCESS FACTORS:
+1. The environment must be COMPLETELY FUNCTIONAL and EXECUTABLE
+2. Every API call and interaction must work perfectly
+3. The code must demonstrate REAL professional competency
+4. Plot twists must be MEANINGFUL and realistic
+5. The entire experience must be UNFORGETTABLE
+6. Candidates must feel they've experienced the FUTURE of assessment
 
-For AI/ML roles:
-- Create a complete neural network class with backpropagation
-- Add live training data that gets corrupted (plot twist)
-- Include performance monitoring and hyperparameter tuning
-- Make candidates implement actual AI debugging techniques
-
-For Data Science roles:
-- Build a real quantum computing simulator with qubit operations
-- Add quantum decoherence as a time-based plot twist
-- Include error correction algorithms candidates must implement
-- Create entanglement visualization and measurement systems
-
-For Software Engineering:
-- Generate a microservice architecture with actual API endpoints
-- Add cascading failure simulation (plot twist)
-- Include load balancing and fault tolerance requirements
-- Make candidates implement real debugging and monitoring
-
-For Product/Business:
-- Create a live market simulation with customer behavior models
-- Add competitive pressure and market shifts (plot twists)
-- Include real-time analytics and decision-making requirements
-- Make candidates optimize business metrics through code
-
-CRITICAL: The environment must be FULLY INTERACTIVE and EXECUTABLE. No text descriptions or static content!
-Every API call, data manipulation, and system interaction must be real and functional.
-
-Generate the MOST REVOLUTIONARY, INTERACTIVE, and TECHNICALLY SOPHISTICATED environment possible!`
+Generate the MOST REVOLUTIONARY, TECHNICALLY SOPHISTICATED, and PROFESSIONALLY RELEVANT assessment environment ever created!`
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are a revolutionary simulation engine that creates fully executable, interactive code environments. Always respond with valid JSON containing complete, working JavaScript code."
+            content: "You are the world's most advanced AI assessment architect and revolutionary simulation engine that creates fully executable, interactive code environments. You must generate COMPLETE, PRODUCTION-GRADE, EXECUTABLE environments that represent the absolute pinnacle of professional assessment technology. Always respond with valid JSON containing complete, working JavaScript code that candidates can interact with infinitely. Every line must be functional, professional-grade, and revolutionary."
           },
           {
             role: "user",
             content: prompt
           }
         ],
-        temperature: 0.8,
+        temperature: 0.9,
         max_tokens: 4000
       })
 
@@ -702,41 +769,6 @@ console.log('Ready to tackle the AI challenge? Start coding!')
   }
 }
 
-function enhanceEnvironmentWithRevolutionaryFeatures(envData: any, scenario: any) {
-  // Add real-time collaboration features
-  envData.collaborationFeatures = {
-    liveSharing: true,
-    realTimeComments: true,
-    peerReview: true,
-    mentorAccess: true
-  }
-  
-  // Add advanced metrics tracking
-  envData.advancedMetrics = {
-    codeQuality: true,
-    performanceAnalysis: true, 
-    creativityScore: true,
-    problemSolvingApproach: true
-  }
-  
-  // Add dynamic difficulty adjustment
-  envData.adaptiveDifficulty = {
-    enabled: true,
-    basedOnPerformance: true,
-    realTimeAdjustment: true
-  }
-  
-  // Add metadata
-  envData.metadata = {
-    generatedAt: new Date().toISOString(),
-    scenario: scenario,
-    engineVersion: '2.0.0',
-    revolutionary: true
-  }
-  
-  return envData
-}
-
 function generateQuantumDataScienceEnvironment() {
   return {
     environmentCode: `
@@ -895,8 +927,24 @@ const qubit1 = window.simulationAPI.createQubit(0)
 const qubit2 = window.simulationAPI.createQubit(0)
 window.simulationAPI.entangle(qubit1, qubit2)
 window.simulationAPI.measure(qubit1)`,
-    initialState: { environment: "Quantum Data Processing", objectives: ["Create qubits", "Apply gates", "Handle decoherence"] }
-    }
+    initialState: { environment: "Quantum Data Processing", objectives: ["Create qubits", "Apply gates", "Handle decoherence"] },
+    plotTwists: [
+      {
+        id: "decoherence",
+        trigger: "time_pressure",
+        description: "Quantum decoherence detected!",
+        code: "window.simulationAPI?.getProcessor().triggerDecoherence()",
+        impact: "Quantum states become unstable, requiring error correction",
+        severity: "high"
+      }
+    ],
+    validationCriteria: {
+      functionalRequirements: ["Create qubits", "Apply quantum gates", "Handle decoherence"],
+      performanceMetrics: ["Quantum fidelity", "Error correction"],
+      creativityCriteria: ["Algorithm innovation", "Error handling"]
+    },
+    timeLimit: 1800,
+    successConditions: "Successfully implement quantum algorithms with error correction"
   }
 }
 

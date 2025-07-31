@@ -70,8 +70,51 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
     setIsSubmitting(true)
     
     try {
-      // Enhanced evaluation for interactive assessments
-      const results = await evaluateInteractiveAssessment()
+      // Prepare answers array for AI evaluation
+      const answersArray = assessmentData.questions.map((_: any, index: number) => 
+        typeof answers[index] === 'object' ? JSON.stringify(answers[index]) : answers[index] || ''
+      )
+
+      const evaluationPayload = {
+        assessmentData: {
+          title: assessmentData.title || `${assessmentData.jobTitle} Interactive Assessment`,
+          company: assessmentData.company || 'Company',
+          description: assessmentData.description || assessmentData.jobDescription,
+          type: 'interactive',
+          duration: assessmentData.timeLimit || 60,
+          questions: assessmentData.questions
+        },
+        answers: answersArray,
+        candidateProfile: {
+          name: user?.name || 'Anonymous',
+          email: user?.email,
+          experience: user?.experience,
+          skills: user?.skills,
+          education: user?.education,
+          summary: user?.summary,
+          linkedinUrl: user?.linkedinUrl
+        },
+        timeSpent: (assessmentData.timeLimit * 60) - timeRemaining
+      }
+
+      console.log('📤 Sending interactive assessment to AI evaluation:', evaluationPayload)
+
+      // Call the real AI evaluation API
+      const response = await fetch('/api/evaluate-assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(evaluationPayload),
+      })
+
+      let results
+      if (response.ok) {
+        results = await response.json()
+        console.log('🎯 AI evaluation results for interactive assessment:', results)
+      } else {
+        throw new Error(`AI evaluation failed: ${response.status}`)
+      }
       
       // Save response to data store
       const candidateResponse = {
@@ -80,7 +123,7 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
         candidateId: user?.id || '',
         candidateName: user?.name || '',
         candidateEmail: user?.email || '',
-        score: results.percentage || 0,
+        score: results.percentage || results.totalScore || 0,
         completedAt: new Date().toISOString(),
         status: 'completed' as const,
         answers: Object.entries(answers).map(([questionIndex, answer]) => ({
@@ -89,9 +132,10 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
           score: results.questionScores?.[parseInt(questionIndex)]?.score || 0,
           interactionData: interactionData[parseInt(questionIndex)]
         })),
-        feedback: results.breakdown || {},
+        feedback: results.breakdown || results.overallFeedback || {},
         interactionSummary: interactionData,
-        assessmentType: 'interactive'
+        assessmentType: 'interactive',
+        timeSpent: results.timeSpent || ((assessmentData.timeLimit * 60) - timeRemaining)
       }
       
       await createResponse(candidateResponse)
@@ -115,7 +159,9 @@ export default function InteractiveAssessment({ assessmentData, onBack, onComple
           score: fallbackResults.questionScores?.[parseInt(questionIndex)]?.score || 0
         })),
         feedback: fallbackResults.breakdown || {},
-        assessmentType: 'interactive'
+        interactionSummary: interactionData,
+        assessmentType: 'interactive',
+        aiNote: 'AI evaluation temporarily unavailable - fallback scoring applied'
       }
       
       await createResponse(candidateResponse)

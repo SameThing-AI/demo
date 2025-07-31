@@ -108,16 +108,26 @@ export default function AssessmentDisplay({ assessmentData, onBack, onTakeAssess
             
             <div className="text-center">
               <h1 className="text-3xl font-bold mb-2">
-                {assessmentData.jobTitle || 'Untitled'} Assessment
+                {assessmentData.jobTitle || assessmentData.title || 'Untitled'} Assessment
               </h1>
               <p className="text-blue-100 text-lg">
                 {assessmentData.company || 'Company'}
               </p>
               
+              {/* Job Description */}
+              {assessmentData.jobDescription && (
+                <div className="mt-4 max-w-2xl mx-auto">
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    {assessmentData.jobDescription}
+                  </p>
+                </div>
+              )}
+              
               {/* Revolutionary Assessment Indicators */}
               {(assessmentData.assessmentType === 'revolutionary' || 
-                (assessmentData.scenarios && assessmentData.scenarios.length > 0) || 
-                assessmentData.questions?.some((q: any) => q.scenario?.type === 'simulation')) && (
+                assessmentData.assessmentType === 'revolutionary-simulation' ||
+                assessmentData.generated ||
+                assessmentData.questions?.some((q: any) => q.type === 'revolutionary-simulation')) && (
                 <div className="flex justify-center items-center space-x-3 mt-4 mb-4">
                   <span className="px-3 py-1 bg-purple-500/20 text-purple-100 text-sm font-medium rounded-full flex items-center">
                     <Zap className="h-4 w-4 mr-1" />
@@ -308,9 +318,98 @@ export default function AssessmentDisplay({ assessmentData, onBack, onTakeAssess
                   assessmentData.questions.map((question: any, index: number) => (
                     <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
                       {/* Check if this is a revolutionary scenario-based question */}
-                      {question.scenario ? (
+                      {question.type === 'revolutionary-simulation' ? (
                         <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-                          {/* Scenario Header */}
+                          {/* Revolutionary Scenario Header */}
+                          <div className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-2xl font-bold text-white mb-2 flex items-center">
+                                  🎮 {question.scenario?.title || question.question}
+                                </h3>
+                                <div className="flex items-center space-x-4 text-sm">
+                                  <span className="bg-white/20 px-3 py-1 rounded-full">
+                                    REVOLUTIONARY
+                                  </span>
+                                  <span className="bg-white/20 px-3 py-1 rounded-full">
+                                    ⏱️ {Math.floor((question.timeLimit || 1800) / 60)}min
+                                  </span>
+                                  <span className="bg-white/20 px-3 py-1 rounded-full">
+                                    🔥 {question.difficulty?.toUpperCase() || 'MEDIUM'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                              <div>
+                                <h4 className="text-white font-medium mb-2 flex items-center">
+                                  🌟 The Scenario
+                                </h4>
+                                <p className="text-blue-100 text-sm">
+                                  {question.scenario?.description || question.description}
+                                </p>
+                              </div>
+                              
+                              <div>
+                                <h4 className="text-white font-medium mb-2 flex items-center">
+                                  🚨 Your Mission
+                                </h4>
+                                <ul className="text-blue-100 text-sm space-y-1">
+                                  {question.scenario?.victoryConditions?.map((condition: string, i: number) => (
+                                    <li key={i}>• {condition}</li>
+                                  )) || [
+                                    '• Complete the revolutionary challenge',
+                                    '• Adapt to plot twists',
+                                    '• Demonstrate expertise'
+                                  ].map((condition, i) => (
+                                    <li key={i}>{condition}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                            
+                            {/* Revolutionary Features */}
+                            <div className="bg-white/10 rounded-lg p-4">
+                              <h4 className="text-white font-medium mb-3 flex items-center">
+                                🌪️ Plot Twists & Features
+                              </h4>
+                              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <ul className="text-blue-100 space-y-1">
+                                    <li>• 🎮 Live simulation environment</li>
+                                    <li>• ⚡ Dynamic plot twists</li>
+                                    <li>• 📊 Real-time performance metrics</li>
+                                  </ul>
+                                </div>
+                                <div>
+                                  <ul className="text-blue-100 space-y-1">
+                                    <li>• 🛠️ Professional tools arsenal</li>
+                                    <li>• 🎯 Adaptive difficulty scaling</li>
+                                    <li>• 🏆 Victory condition tracking</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Skills Tested */}
+                            <div className="mt-4">
+                              <h4 className="text-white font-medium mb-2 flex items-center">
+                                📚 Skills Tested:
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {(question.scenario?.skillsTested || ['Problem Solving', 'Adaptability', 'Innovation']).map((skill: string, i: number) => (
+                                  <span key={i} className="bg-white/20 px-2 py-1 rounded text-xs">
+                                    {skill}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : question.scenario ? (
+                        <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+                          {/* Regular Scenario Header */}
                           <div className="p-6">
                             <div className="flex justify-between items-start mb-4">
                               <div>

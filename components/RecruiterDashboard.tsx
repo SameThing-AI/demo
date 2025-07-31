@@ -139,59 +139,60 @@ export default function RecruiterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen-responsive bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Building className="h-8 w-8 text-blue-600 mr-3" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Recruiter Dashboard</h1>
-                <p className="text-sm text-gray-600">{user?.company}</p>
+      <header className="bg-white shadow-sm border-b sticky top-0 z-40 safe-area-padding">
+        <div className="container-responsive">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 gap-3">
+            <div className="flex items-center min-w-0 flex-1">
+              <Building className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <h1 className="text-fluid-xl font-bold text-gray-900 truncate">Recruiter Dashboard</h1>
+                <p className="text-fluid-sm text-gray-600 truncate">Welcome back, {user?.name}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleAIAssistant}
-                className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                className="flex items-center btn-responsive-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
               >
                 <span className="mr-1">🤖</span>
-                AI Assistant
+                <span className="hidden xs:inline">AI Assistant</span>
+                <span className="xs:hidden">AI</span>
               </button>
               <button
                 onClick={handleEnterpriseIntegration}
-                className="flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+                className="flex items-center btn-responsive-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
               >
                 <span className="mr-1">🏢</span>
-                Enterprise
+                <span className="hidden sm:inline">Enterprise</span>
+                <span className="sm:hidden">Ent</span>
               </button>
-              <span className="text-sm text-gray-700">Welcome, {user?.name}</span>
               <button
                 onClick={logout}
-                className="flex items-center text-gray-600 hover:text-red-600 transition-colors"
+                className="flex items-center text-gray-600 hover:text-red-600 transition-colors tap-target"
               >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
+                <LogOut className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container-responsive py-4 sm:py-6 lg:py-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid-responsive-1-2-4 mb-6 sm:mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-6 rounded-lg shadow-sm"
+            className="bg-white card-responsive rounded-lg shadow-sm"
           >
             <div className="flex items-center">
-              <FileText className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Assessments</p>
-                <p className="text-2xl font-bold text-gray-900">{userAssessments.length}</p>
+              <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-fluid-xs font-medium text-gray-600 truncate">Total Assessments</p>
+                <p className="text-fluid-xl font-bold text-gray-900">{userAssessments.length}</p>
               </div>
             </div>
           </motion.div>
@@ -200,13 +201,13 @@ export default function RecruiterDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white p-6 rounded-lg shadow-sm"
+            className="bg-white card-responsive rounded-lg shadow-sm"
           >
             <div className="flex items-center">
-              <Users className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Candidates</p>
-                <p className="text-2xl font-bold text-gray-900">{responses.length}</p>
+              <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-fluid-xs font-medium text-gray-600 truncate">Total Candidates</p>
+                <p className="text-fluid-xl font-bold text-gray-900">{responses.length}</p>
               </div>
             </div>
           </motion.div>
@@ -215,14 +216,14 @@ export default function RecruiterDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white p-6 rounded-lg shadow-sm"
+            className="bg-white card-responsive rounded-lg shadow-sm"
           >
             <div className="flex items-center">
-              <BarChart3 className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Avg Score</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(responses.reduce((sum: number, r: any) => sum + r.score, 0) / responses.length)}%
+              <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-fluid-xs font-medium text-gray-600 truncate">Avg Score</p>
+                <p className="text-fluid-xl font-bold text-gray-900">
+                  {responses.length > 0 ? Math.round(responses.reduce((sum: number, r: any) => sum + r.score, 0) / responses.length) : 0}%
                 </p>
               </div>
             </div>
@@ -232,21 +233,24 @@ export default function RecruiterDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white p-6 rounded-lg shadow-sm"
+            className="bg-white card-responsive rounded-lg shadow-sm"
           >
             <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Week</p>
-                <p className="text-2xl font-bold text-gray-900">5</p>
+              <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600 flex-shrink-0" />
+              <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                <p className="text-fluid-xs font-medium text-gray-600 truncate">
+                  <span className="hidden sm:inline">This Week</span>
+                  <span className="sm:hidden">Week</span>
+                </p>
+                <p className="text-fluid-xl font-bold text-gray-900">5</p>
               </div>
             </div>
           </motion.div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">My Assessments</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">My Assessments</h2>
           <div className="flex space-x-3">
             <button
               onClick={handleCreateAssessment}

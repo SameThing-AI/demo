@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { useAuth } from './NextAuthContext'
 
 export interface Assessment {
@@ -12,7 +12,7 @@ export interface Assessment {
   createdAt: string
   createdBy: string
   duration?: number
-  type?: 'traditional' | 'ai-powered' | 'creative' | 'self-modifying' | 'video' | 'audio' | 'multi-modal'
+  type?: 'traditional' | 'revolutionary-ai' | 'creative' | 'self-modifying' | 'video' | 'audio' | 'multi-modal'
   creativeType?: string
   scenario?: string
   concept?: any
@@ -64,6 +64,7 @@ interface DatabaseDataContextType {
   createAssessment: (assessment: Omit<Assessment, 'id' | 'createdAt' | 'createdBy'>) => Promise<Assessment>
   updateAssessment: (id: string, updates: Partial<Assessment>) => Promise<Assessment>
   deleteAssessment: (id: string) => Promise<void>
+  getAssessmentById: (id: string) => Assessment | null
   
   // Response methods
   fetchResponses: (assessmentId?: string, candidateId?: string) => Promise<void>
@@ -79,14 +80,14 @@ interface DatabaseDataContextType {
 const DatabaseDataContext = createContext<DatabaseDataContextType | undefined>(undefined)
 
 export function DatabaseDataProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth()
   const [assessments, setAssessments] = useState<Assessment[]>([])
   const [responses, setResponses] = useState<CandidateResponse[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Fetch assessments
-  const fetchAssessments = async () => {
+  const fetchAssessments = useCallback(async () => {
     if (!isAuthenticated) return
     
     try {
@@ -105,7 +106,7 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated])
 
   // Create assessment
   const createAssessment = async (assessmentData: Omit<Assessment, 'id' | 'createdAt' | 'createdBy'>): Promise<Assessment> => {
@@ -180,7 +181,7 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
   }
 
   // Fetch responses
-  const fetchResponses = async (assessmentId?: string, candidateId?: string) => {
+  const fetchResponses = useCallback(async (assessmentId?: string, candidateId?: string) => {
     if (!isAuthenticated) return
 
     try {
@@ -204,12 +205,25 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isAuthenticated])
 
   // Create response
   const createResponse = async (responseData: Omit<CandidateResponse, 'id' | 'candidateId' | 'candidateName' | 'candidateEmail' | 'startedAt'>): Promise<CandidateResponse> => {
     try {
       setError(null)
+      console.log('🚀 Creating response:', responseData)
+      
+      // Check if response already exists for this assessment
+      const existingResponse = responses.find(r => 
+        r.assessmentId === responseData.assessmentId && 
+        r.candidateId === user?.id
+      )
+      
+      if (existingResponse) {
+        console.log('⚠️ Response already exists, returning existing response')
+        return existingResponse
+      }
+      
       const response = await fetch('/api/responses', {
         method: 'POST',
         headers: {
@@ -220,16 +234,70 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
 
       if (!response.ok) {
         const errorData = await response.text()
+        
+        // If response already exists (409), try to find and return the existing one
+        if (response.status === 409) {
+          console.log('⚠️ Response already exists on server (409), refreshing local data')
+          await fetchResponses(responseData.assessmentId, user?.id)
+          const existingResponse = responses.find(r => 
+            r.assessmentId === responseData.assessmentId && 
+            r.candidateId === user?.id
+          )
+          
+          if (existingResponse) {
+            console.log('✅ Found existing response after 409 error')
+            return existingResponse
+          }
+        }
+        
+        // Handle rate limiting with retry after delay
+        if (response.status === 429) {
+          console.log('⚠️ Rate limited (429), will retry after delay')
+          await new Promise(resolve => setTimeout(resolve, 2000)) // Wait 2 seconds
+          
+          // Retry the request once
+          const retryResponse = await fetch('/api/responses', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(responseData),
+          })
+          
+          if (retryResponse.ok) {
+            const newResponse = await retryResponse.json()
+            console.log('✅ Response created successfully on retry:', newResponse)
+            
+            setResponses(prev => {
+              const filtered = prev.filter(r => !(r.assessmentId === responseData.assessmentId && r.candidateId === user?.id))
+              return [newResponse, ...filtered]
+            })
+            
+            return newResponse
+          } else {
+            const retryErrorData = await retryResponse.text()
+            console.error('Retry also failed:', retryResponse.status, retryErrorData)
+            throw new Error(`Server is temporarily busy. Please try again in a moment. (${retryResponse.status})`)
+          }
+        }
+        
         console.error('Response creation failed:', response.status, errorData)
         throw new Error(`Failed to create response: ${response.status} ${errorData}`)
       }
 
       const newResponse = await response.json()
-      setResponses(prev => [newResponse, ...prev])
+      console.log('✅ Response created successfully:', newResponse)
+      
+      // Update local state immediately
+      setResponses(prev => {
+        const filtered = prev.filter(r => !(r.assessmentId === responseData.assessmentId && r.candidateId === user?.id))
+        return [newResponse, ...filtered]
+      })
+      
       return newResponse
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
-      console.error('Error in createResponse:', err)
+      console.error('❌ Error in createResponse:', err)
       setError(errorMessage)
       throw err
     }
@@ -277,6 +345,10 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
     return responses.filter(r => r.candidateId === candidateId)
   }
 
+  const getAssessmentById = (id: string): Assessment | null => {
+    return assessments.find(a => a.id === id) || null
+  }
+
   // Load initial data when authenticated
   useEffect(() => {
     if (isAuthenticated && !authLoading) {
@@ -295,6 +367,7 @@ export function DatabaseDataProvider({ children }: { children: ReactNode }) {
       createAssessment,
       updateAssessment,
       deleteAssessment,
+      getAssessmentById,
       fetchResponses,
       createResponse,
       updateResponse,

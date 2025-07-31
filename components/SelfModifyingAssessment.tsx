@@ -212,33 +212,127 @@ export default function SelfModifyingAssessment({
   }
 
   const handleSubmit = async () => {
-    // Enhanced submission with adaptation data
-    const candidateResponse = {
-      id: Date.now().toString(),
-      assessmentId: assessmentData.id || Date.now().toString(),
-      candidateId: user?.id || '',
-      candidateName: user?.name || '',
-      candidateEmail: user?.email || '',
-      score: calculateAdaptiveScore(),
-      completedAt: new Date().toISOString(),
-      status: 'completed' as const,
-      answers: Object.entries(answers).map(([questionIndex, answer]) => ({
-        questionId: questions[parseInt(questionIndex)]?.id || questionIndex,
-        answer: typeof answer === 'object' ? JSON.stringify(answer) : answer,
-        score: 85 // Enhanced scoring logic would go here
-      })),
-      feedback: generateAdaptiveFeedback(),
-      adaptationData: {
-        totalAdaptations,
-        finalSkillLevel: adaptationState.skillLevel,
-        adaptationHistory: adaptationState.adaptationHistory,
-        finalConfidenceLevel: adaptationState.confidenceLevel,
-        focusAreas: adaptationState.focusAreas
-      }
-    }
+    try {
+      // Prepare answers array for AI evaluation
+      const answersArray = questions.map((_: any, index: number) => 
+        typeof answers[index] === 'object' ? JSON.stringify(answers[index]) : answers[index] || ''
+      )
 
-    await createResponse(candidateResponse)
-    onComplete(candidateResponse)
+      const evaluationPayload = {
+        assessmentData: {
+          title: assessmentData.title || 'Self-Modifying Assessment',
+          company: assessmentData.company || 'Company',
+          description: assessmentData.description || assessmentData.jobDescription,
+          type: 'self-modifying',
+          duration: assessmentData.timeLimit || 60,
+          questions: questions
+        },
+        answers: answersArray,
+        candidateProfile: {
+          name: user?.name || 'Anonymous',
+          email: user?.email,
+          experience: user?.experience,
+          skills: user?.skills,
+          education: user?.education,
+          summary: user?.summary,
+          linkedinUrl: user?.linkedinUrl
+        },
+        timeSpent: (assessmentData.timeLimit * 60) - timeRemaining
+      }
+
+      console.log('📤 Sending self-modifying assessment to AI evaluation:', evaluationPayload)
+
+      // Call the real AI evaluation API
+      const response = await fetch('/api/evaluate-assessment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(evaluationPayload),
+      })
+
+      let results
+      if (response.ok) {
+        results = await response.json()
+        console.log('🎯 AI evaluation results for self-modifying assessment:', results)
+      } else {
+        throw new Error(`AI evaluation failed: ${response.status}`)
+      }
+
+      // Enhanced submission with adaptation data
+      const candidateResponse = {
+        id: Date.now().toString(),
+        assessmentId: assessmentData.id || Date.now().toString(),
+        candidateId: user?.id || '',
+        candidateName: user?.name || '',
+        candidateEmail: user?.email || '',
+        score: results.percentage || results.totalScore || calculateAdaptiveScore(),
+        completedAt: new Date().toISOString(),
+        status: 'completed' as const,
+        answers: Object.entries(answers).map(([questionIndex, answer]) => ({
+          questionId: questions[parseInt(questionIndex)]?.id || questionIndex,
+          answer: typeof answer === 'object' ? JSON.stringify(answer) : answer,
+          score: results.questionScores?.[parseInt(questionIndex)]?.score || 85
+        })),
+        feedback: results.breakdown || results.overallFeedback || generateAdaptiveFeedback(),
+        adaptationData: {
+          totalAdaptations,
+          finalSkillLevel: adaptationState.skillLevel,
+          adaptationHistory: adaptationState.adaptationHistory,
+          finalConfidenceLevel: adaptationState.confidenceLevel,
+          focusAreas: adaptationState.focusAreas
+        },
+        timeSpent: results.timeSpent || ((assessmentData.timeLimit * 60) - timeRemaining)
+      }
+
+      await createResponse(candidateResponse)
+      onComplete(results)
+    } catch (error) {
+      console.error('Error in AI evaluation for self-modifying assessment:', error)
+      
+      // Fallback to original adaptive scoring logic
+      const fallbackResponse = {
+        id: Date.now().toString(),
+        assessmentId: assessmentData.id || Date.now().toString(),
+        candidateId: user?.id || '',
+        candidateName: user?.name || '',
+        candidateEmail: user?.email || '',
+        score: calculateAdaptiveScore(),
+        completedAt: new Date().toISOString(),
+        status: 'completed' as const,
+        answers: Object.entries(answers).map(([questionIndex, answer]) => ({
+          questionId: questions[parseInt(questionIndex)]?.id || questionIndex,
+          answer: typeof answer === 'object' ? JSON.stringify(answer) : answer,
+          score: 85 // Enhanced scoring logic would go here
+        })),
+        feedback: generateAdaptiveFeedback(),
+        adaptationData: {
+          totalAdaptations,
+          finalSkillLevel: adaptationState.skillLevel,
+          adaptationHistory: adaptationState.adaptationHistory,
+          finalConfidenceLevel: adaptationState.confidenceLevel,
+          focusAreas: adaptationState.focusAreas
+        },
+        timeSpent: (assessmentData.timeLimit * 60) - timeRemaining,
+        aiNote: 'AI evaluation temporarily unavailable - adaptive scoring applied'
+      }
+
+      await createResponse(fallbackResponse)
+      
+      // Convert to results format for onComplete
+      const fallbackResults = {
+        totalScore: fallbackResponse.score,
+        maxScore: 100,
+        percentage: fallbackResponse.score,
+        passed: fallbackResponse.score >= 70,
+        timeSpent: fallbackResponse.timeSpent,
+        breakdown: fallbackResponse.feedback,
+        adaptationData: fallbackResponse.adaptationData,
+        aiNote: 'AI evaluation temporarily unavailable - adaptive scoring applied'
+      }
+      
+      onComplete(fallbackResults)
+    }
   }
 
   const formatTime = (seconds: number) => {

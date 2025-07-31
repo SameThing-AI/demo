@@ -110,9 +110,14 @@ Return in this JSON format:
         cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '')
       }
       
+      // Additional cleaning for common AI response issues
+      cleanResponse = cleanResponse.replace(/^[^{]*{/, '{').replace(/}[^}]*$/, '}')
+      
       formattedData = JSON.parse(cleanResponse)
     } catch (parseError) {
       console.error('Failed to parse AI response:', parseError)
+      console.error('Raw AI response:', aiResponse)
+      
       // Fallback formatting
       formattedData = {
         summary: jobDescription.substring(0, 300) + '...',

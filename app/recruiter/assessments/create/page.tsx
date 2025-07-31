@@ -66,11 +66,11 @@ export default function CreateAssessmentPage() {
               </button>
               <div>
                 <h1 className="text-3xl font-bold text-white">
-                  {currentView === 'form' ? 'Create Assessment' : '🎉 Revolutionary Assessment Created!'}
+                  {currentView === 'form' ? 'Create Revolutionary Assessment' : '🎉 Revolutionary Assessment Created!'}
                 </h1>
                 <p className="text-gray-400">
                   {currentView === 'form' 
-                    ? 'Design your assessment with AI-powered revolutionary features' 
+                    ? 'Design your assessment with AI-powered revolutionary features including creative challenges' 
                     : 'Preview your extraordinary AI-generated assessment'
                   }
                 </p>

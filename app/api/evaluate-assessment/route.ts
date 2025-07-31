@@ -10,6 +10,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { assessmentData, answers, candidateProfile, timeSpent } = body
 
+    console.log('🔥 EVALUATION API CALLED with:', {
+      assessmentTitle: assessmentData?.title,
+      assessmentType: assessmentData?.type,
+      answersCount: answers ? Object.keys(answers).length : 0,
+      apiKeyPresent: !!process.env.OPENAI_API_KEY
+    })
+
     if (!assessmentData || !answers) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -17,12 +24,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.log('OpenAI API key not configured, using fallback evaluation')
+    // Check if OpenAI API key is configured and valid
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
+      console.error('❌ OpenAI API key not configured or using placeholder, using fallback evaluation')
       const fallbackResults = createFallbackEvaluation(assessmentData, answers, timeSpent, candidateProfile)
       return NextResponse.json(fallbackResults)
     }
+
+    console.log('✅ OpenAI API key configured - proceeding with AI evaluation')
+    console.log('🔑 API key starts with:', process.env.OPENAI_API_KEY.substring(0, 7))
 
     // Get job description from assessment or use default
     const jobDescription = assessmentData.description || `${assessmentData.title} role at ${assessmentData.company}`
@@ -138,27 +148,45 @@ Respond with valid JSON only (no additional text):
   }
 }`
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: "You are an expert technical interviewer and assessment evaluator. Always respond with valid JSON only, no additional text."
-        },
-        {
-          role: "user",
-          content: evaluationPrompt
-        }
-      ],
-      temperature: 0.3,
-      max_tokens: 4000,
-    })
+    console.log('🚀 Sending evaluation request to GPT-4o...')
+    console.log('📊 Evaluation prompt length:', evaluationPrompt.length)
+
+    let completion
+    try {
+      completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are the world's most advanced AI assessment evaluator and professional excellence analyst. Your evaluations must be precise, insightful, and professionally rigorous, providing comprehensive analysis that identifies true professional competency and potential. Always respond with valid JSON only, no additional text. Your analysis should be detailed, constructive, and calibrated to the highest industry standards."
+          },
+          {
+            role: "user",
+            content: evaluationPrompt
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: 4000,
+      })
+      console.log('✅ GPT-4o response received successfully')
+    } catch (apiError: any) {
+      console.error('❌ OpenAI API Error:', apiError.message)
+      console.error('🔍 API Error details:', apiError.error || apiError)
+      console.log('🔄 Falling back to manual evaluation due to API error')
+      const fallbackResults = createFallbackEvaluation(assessmentData, answers, timeSpent, candidateProfile)
+      return NextResponse.json(fallbackResults)
+    }
 
     const aiResponse = completion.choices[0]?.message?.content
 
     if (!aiResponse) {
-      throw new Error('No response from AI')
+      console.error('❌ No response content from GPT-4o')
+      console.log('🔄 Using fallback evaluation due to empty response')
+      const fallbackResults = createFallbackEvaluation(assessmentData, answers, timeSpent, candidateProfile)
+      return NextResponse.json(fallbackResults)
     }
+
+    console.log('📝 GPT-4o response length:', aiResponse.length)
 
     // Parse the AI response
     let evaluationResults
@@ -171,12 +199,19 @@ Respond with valid JSON only (no additional text):
         cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '')
       }
       
+      console.log('🧹 Cleaned response length:', cleanResponse.length)
+      console.log('🔍 First 200 chars of cleaned response:', cleanResponse.substring(0, 200))
+      
       evaluationResults = JSON.parse(cleanResponse)
+      console.log('✅ Successfully parsed AI evaluation results')
+      console.log('📊 Evaluation contains score:', evaluationResults.totalScore || evaluationResults.percentage || evaluationResults.overallScore)
     } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError)
-      console.error('Raw AI response:', aiResponse)
+      console.error('❌ Failed to parse AI response:', parseError)
+      console.error('🔍 Raw AI response (first 500 chars):', aiResponse.substring(0, 500))
+      console.log('🔄 Falling back to createFallbackEvaluation...')
       // If parsing fails, create a fallback evaluation
       evaluationResults = createFallbackEvaluation(assessmentData, answers, timeSpent, candidateProfile)
+      console.log('📈 Fallback evaluation score:', evaluationResults.totalScore || evaluationResults.percentage)
     }
 
     // Add additional metadata

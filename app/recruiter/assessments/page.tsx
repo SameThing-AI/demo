@@ -17,7 +17,7 @@ export default function RecruiterAssessmentsPage() {
   const { user, isAuthenticated, isLoading } = useAuth()
   const { assessments, responses, getResponsesForAssessment, fetchAssessments } = useDatabaseData()
   const router = useRouter()
-  const [selectedTab, setSelectedTab] = useState<'all' | 'traditional' | 'ai-powered'>('all')
+  const [selectedTab, setSelectedTab] = useState<'all' | 'traditional' | 'revolutionary-ai'>('all')
   const [selectedAssessments, setSelectedAssessments] = useState<string[]>([])
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const [showBulkActions, setShowBulkActions] = useState(false)
@@ -46,14 +46,14 @@ export default function RecruiterAssessmentsPage() {
     : userAssessments.filter(a => {
         switch (selectedTab) {
           case 'traditional': return a.type === 'traditional'
-          case 'ai-powered': return a.type === 'ai-powered' || ['creative', 'self-modifying', 'video', 'audio', 'multi-modal'].includes(a.type || '')
+          case 'revolutionary-ai': return a.type === 'revolutionary-ai' || ['creative', 'self-modifying', 'video', 'audio', 'multi-modal'].includes(a.type || '')
           default: return true
         }
       })
 
   const getAssessmentIcon = (type: string | undefined) => {
     switch (type) {
-      case 'ai-powered':
+      case 'revolutionary-ai':
       case 'creative': 
       case 'self-modifying': 
       case 'video': 
@@ -67,13 +67,13 @@ export default function RecruiterAssessmentsPage() {
 
   const getAssessmentTypeLabel = (type: string | undefined) => {
     switch (type) {
-      case 'ai-powered':
+      case 'revolutionary-ai':
       case 'creative': 
       case 'self-modifying': 
       case 'video': 
       case 'audio': 
       case 'multi-modal': 
-        return 'AI-Powered'
+        return '🚀 Revolutionary AI'
       default: 
         return 'Traditional'
     }
@@ -81,7 +81,7 @@ export default function RecruiterAssessmentsPage() {
 
   const getAssessmentTypeColor = (type: string | undefined) => {
     switch (type) {
-      case 'ai-powered':
+      case 'revolutionary-ai':
       case 'creative': 
       case 'self-modifying': 
       case 'video': 
@@ -303,7 +303,7 @@ export default function RecruiterAssessmentsPage() {
             {[
               { key: 'all', label: 'All Assessments' },
               { key: 'traditional', label: 'Traditional' },
-              { key: 'ai-powered', label: 'AI-Powered' }
+              { key: 'revolutionary-ai', label: '🚀 Revolutionary AI' }
             ].map((tab) => (
               <button
                 key={tab.key}

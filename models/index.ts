@@ -113,9 +113,23 @@ const assessmentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['traditional', 'ai-powered', 'creative', 'self-modifying', 'video', 'audio', 'multi-modal'],
+    enum: ['traditional', 'revolutionary-ai', 'creative', 'self-modifying', 'video', 'audio', 'multi-modal', 'revolutionary'],
     default: 'traditional',
   },
+  // AI-Generated Assessment Fields
+  assessmentType: String, // Type from AI generator
+  assessmentInterface: mongoose.Schema.Types.Mixed, // Complete AI interface specification
+  scenarios: mongoose.Schema.Types.Mixed, // AI-generated scenarios
+  revolutionaryTitle: String,
+  instructions: String,
+  totalTime: Number,
+  aiAssistanceMode: String,
+  uniqueFeatures: [String],
+  criteria: mongoose.Schema.Types.Mixed,
+  generated: Boolean, // Whether this was AI-generated
+  aiGeneratedAt: Date, // When AI generation occurred
+  
+  // Existing fields
   creativeType: String,
   scenario: String,
   concept: mongoose.Schema.Types.Mixed,

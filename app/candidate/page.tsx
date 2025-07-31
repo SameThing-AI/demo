@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/NextAuthContext'
 import Navigation from '@/components/Navigation'
-import CandidateDashboard from '@/components/CandidateDashboard'
+import CandidateDashboard from '@/components/CandidateDashboardSimple'
 
 export default function CandidatePage() {
   const { user, isAuthenticated, isLoading } = useAuth()

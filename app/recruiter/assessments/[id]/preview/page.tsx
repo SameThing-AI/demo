@@ -34,11 +34,13 @@ export default function PreviewAssessmentPage() {
     setLoading(false)
   }, [isAuthenticated, user, router, assessmentId, assessments])
 
-  // Check if this is a revolutionary assessment
-  const isRevolutionaryAssessment = assessment?.assessmentType === 'revolutionary' || 
-                                   assessment?.liveSimulation || 
-                                   assessment?.plotTwists ||
-                                   assessment?.revolutionaryFeatures
+  // Check if this is an AI-generated assessment
+  const isAIGeneratedAssessment = assessment?.assessmentInterface || 
+                                 assessment?.generated ||
+                                 assessment?.assessmentType === 'revolutionary' || 
+                                 assessment?.liveSimulation || 
+                                 assessment?.plotTwists ||
+                                 assessment?.revolutionaryFeatures
 
   if (!isAuthenticated || loading) {
     return (
@@ -85,12 +87,12 @@ export default function PreviewAssessmentPage() {
                 <span className="text-yellow-400 font-medium">Preview Mode</span>
                 <span className="text-gray-400 text-sm">You are previewing this assessment as a candidate would see it</span>
                 
-                {/* Revolutionary Assessment Indicators */}
-                {isRevolutionaryAssessment && (
+                {/* AI-Generated Assessment Indicators */}
+                {isAIGeneratedAssessment && (
                   <div className="flex items-center space-x-2 ml-4">
                     <div className="flex items-center bg-purple-100/20 text-purple-400 rounded-full px-2 py-1">
                       <Zap className="h-3 w-3 mr-1" />
-                      <span className="text-xs font-medium">Revolutionary</span>
+                      <span className="text-xs font-medium">AI-Generated</span>
                     </div>
                     {assessment.liveSimulation && (
                       <div className="flex items-center bg-blue-100/20 text-blue-400 rounded-full px-2 py-1">
@@ -108,8 +110,8 @@ export default function PreviewAssessmentPage() {
                 )}
               </div>
               <div className="flex items-center space-x-3">
-                {/* Preview Mode Toggle for Revolutionary Assessments */}
-                {isRevolutionaryAssessment && (
+                {/* Preview Mode Toggle for AI-Generated Assessments */}
+                {isAIGeneratedAssessment && (
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setPreviewMode('standard')}
@@ -174,9 +176,9 @@ export default function PreviewAssessmentPage() {
                 {assessment.type === 'ai-powered' && (
                   <li>• This assessment includes AI-powered features for enhanced evaluation</li>
                 )}
-                {isRevolutionaryAssessment && (
+                {isAIGeneratedAssessment && (
                   <>
-                    <li>• 🚀 This is a <strong>Revolutionary Assessment</strong> with advanced simulation features</li>
+                    <li>• 🤖 This is an <strong>AI-Generated Assessment</strong> with advanced simulation features</li>
                     {assessment.liveSimulation && (
                       <li>• 💻 Includes live, executable environments for real-time problem solving</li>
                     )}
@@ -197,12 +199,12 @@ export default function PreviewAssessmentPage() {
               <div className="mt-4 p-3 bg-blue-600/20 border border-blue-500/30 rounded-lg">
                 <p className="text-blue-400 text-sm">
                   <strong>Note:</strong> You're in preview mode. {previewMode === 'simulation' ? 'Live simulation preview shows reduced functionality.' : 'AI chatbot features are disabled in preview.'} 
-                  Candidates will see {isRevolutionaryAssessment ? 'full revolutionary features including live simulation engines' : 'an AI assistant button with question-specific credits'} during actual assessments.
+                  Candidates will see {isAIGeneratedAssessment ? 'full AI-powered features including dynamic simulation engines' : 'an AI assistant button with question-specific credits'} during actual assessments.
                 </p>
               </div>
 
-              {/* Revolutionary Features Preview */}
-              {isRevolutionaryAssessment && previewMode === 'simulation' && (
+              {/* AI-Generated Features Preview */}
+              {isAIGeneratedAssessment && previewMode === 'simulation' && (
                 <div className="mt-4 p-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-lg">
                   <h4 className="text-purple-400 font-medium mb-2 flex items-center">
                     <Zap className="h-4 w-4 mr-2" />
@@ -240,7 +242,7 @@ export default function PreviewAssessmentPage() {
               assessmentData={assessment} // Pass full assessment data for revolutionary features
               isPreview={true}
               onComplete={(responses) => {
-                alert(`Preview completed! ${isRevolutionaryAssessment ? 'Revolutionary features were simulated.' : 'In a real assessment, responses would be saved.'}`)
+                alert(`Preview completed! ${isAIGeneratedAssessment ? 'AI-generated features were simulated.' : 'In a real assessment, responses would be saved.'}`)
                 console.log('Preview responses:', responses)
               }}
             />

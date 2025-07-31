@@ -18,6 +18,20 @@
   }
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
@@ -26,11 +40,336 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
 }
 
+/* Enhanced responsive utilities */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* Container utilities for better responsiveness */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-narrow {
+    @apply w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .container-wide {
+    @apply w-full max-w-none mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16;
+  }
+  
+  .container-fluid {
+    @apply w-full px-4 sm:px-6 lg:px-8;
+  }
+  
+  /* Fluid typography system */
+  .text-fluid-xs {
+    font-size: clamp(0.75rem, 0.75rem + 0.25vw, 0.875rem);
+  }
+  
+  .text-fluid-sm {
+    font-size: clamp(0.875rem, 0.875rem + 0.25vw, 1rem);
+  }
+  
+  .text-fluid-base {
+    font-size: clamp(1rem, 1rem + 0.25vw, 1.125rem);
+  }
+  
+  .text-fluid-lg {
+    font-size: clamp(1.125rem, 1.125rem + 0.5vw, 1.25rem);
+  }
+  
+  .text-fluid-xl {
+    font-size: clamp(1.25rem, 1.25rem + 0.75vw, 1.5rem);
+  }
+  
+  .text-fluid-2xl {
+    font-size: clamp(1.5rem, 1.5rem + 1vw, 2rem);
+  }
+  
+  .text-fluid-3xl {
+    font-size: clamp(1.875rem, 1.875rem + 1.5vw, 2.5rem);
+  }
+  
+  .text-fluid-4xl {
+    font-size: clamp(2.25rem, 2.25rem + 2vw, 3rem);
+  }
+  
+  .text-fluid-5xl {
+    font-size: clamp(2.5rem, 2.5rem + 2.5vw, 4rem);
+  }
+  
+  /* Responsive spacing utilities */
+  .spacing-responsive-xs {
+    @apply p-2 sm:p-3 md:p-4;
+  }
+  
+  .spacing-responsive-sm {
+    @apply p-3 sm:p-4 md:p-6;
+  }
+  
+  .spacing-responsive-base {
+    @apply p-4 sm:p-6 md:p-8;
+  }
+  
+  .spacing-responsive-lg {
+    @apply p-6 sm:p-8 md:p-12;
+  }
+  
+  .spacing-responsive-xl {
+    @apply p-8 sm:p-12 md:p-16;
+  }
+  
+  /* Responsive margin utilities */
+  .margin-responsive-sm {
+    @apply m-2 sm:m-3 md:m-4;
+  }
+  
+  .margin-responsive-base {
+    @apply m-4 sm:m-6 md:m-8;
+  }
+  
+  .margin-responsive-lg {
+    @apply m-6 sm:m-8 md:m-12;
+  }
+  
+  /* Enhanced grid utilities */
+  .grid-responsive-1-2 {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6;
+  }
+  
+  .grid-responsive-1-2-3 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+  
+  .grid-responsive-1-2-4 {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6;
+  }
+  
+  .grid-responsive-auto {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 sm:gap-6;
+  }
+  
+  .grid-responsive-cards {
+    @apply grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  /* Button responsive utilities */
+  .btn-responsive {
+    @apply px-3 py-1.5 text-sm sm:px-4 sm:py-2 sm:text-base md:px-6 md:py-3;
+  }
+  
+  .btn-responsive-sm {
+    @apply px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm md:px-4 md:py-2;
+  }
+  
+  .btn-responsive-lg {
+    @apply px-4 py-2 text-base sm:px-6 sm:py-3 sm:text-lg md:px-8 md:py-4;
+  }
+  
+  /* Form input responsive utilities */
+  .input-responsive {
+    @apply px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base;
+  }
+  
+  /* Card responsive utilities */
+  .card-responsive {
+    @apply p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl;
+  }
+  
+  /* Safe area for mobile devices */
+  .safe-area-padding {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-margin {
+    margin-left: env(safe-area-inset-left);
+    margin-right: env(safe-area-inset-right);
+    margin-top: env(safe-area-inset-top);
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Scrollbar styling */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
+  
+  /* Hide scrollbars for mobile */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Aspect ratio utilities for images/videos */
+  .aspect-responsive {
+    @apply aspect-video sm:aspect-square md:aspect-video;
+  }
+  
+  /* Overflow handling */
+  .overflow-responsive {
+    @apply overflow-hidden sm:overflow-visible;
+  }
+  
+  /* Flex utilities */
+  .flex-responsive-col {
+    @apply flex flex-col sm:flex-row;
+  }
+  
+  /* Hide/show elements based on screen size */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .tablet-up {
+    @apply hidden sm:block;
+  }
+  
+  .desktop-only {
+    @apply hidden lg:block;
+  }
+  
+  /* Layout utilities */
+  .min-h-screen-responsive {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  
+  .h-screen-responsive {
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+/* Enhanced mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* Adjust form elements for mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Better button sizing for touch */
+  button:not(.btn-sm) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (min-width: 641px) {
+  .show-on-mobile-only {
+    display: none !important;
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hide-on-tablet {
+    display: none !important;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1024px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+}
+
+/* Touch optimization for all touch devices */
+@media (hover: none) and (pointer: coarse) {
+  button, 
+  [role="button"], 
+  .cursor-pointer,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve tap targets */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px;
+  }
+}
+
+/* High-DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Crisp images and borders */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  /* Enhanced contrast for better readability */
+  .text-gray-600 {
+    color: rgb(156 163 175);
+  }
+  
+  .text-gray-700 {
+    color: rgb(209 213 219);
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
   }
 }
